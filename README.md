@@ -113,6 +113,38 @@ Tanpa `keystore.properties`, `assembleRelease` tetap berhasil dan menghasilkan
 **Ukuran APK rilis (diukur):** 2.224.281 byte (≈ 2,2 MB, bertanda tangan, satu APK universal; tidak
 perlu ABI split karena aplikasi tidak memuat library native).
 
+### Rilis otomatis (GitHub Actions)
+
+Workflow `.github/workflows/release-apk.yml` menjalankan test + lint, membuat APK rilis
+bertanda tangan dengan nomor versi, memverifikasi tanda tangannya, lalu mengunggahnya.
+
+**Versi**: `versionName` = `X.Y.Z`, `versionCode` = `X*10000 + Y*100 + Z` (contoh 1.2.3 → 10203).
+Di luar CI, versi bisa diatur dengan `-PappVersionName=1.2.3 -PappVersionCode=10203` (default 1.0.0 / 1).
+
+**Sekali saja: isi secrets** (keystore dibuat di komputer Anda, tidak pernah masuk repo):
+1. `./scripts/create-release-keystore.sh` (bila belum punya keystore).
+2. `./scripts/export-github-secrets.sh` → menulis `release-keystore.jks.base64` dan menampilkan petunjuk.
+3. Di GitHub: **Settings → Secrets and variables → Actions → New repository secret**, buat:
+
+   | Secret | Isi |
+   |---|---|
+   | `RELEASE_KEYSTORE_BASE64` | isi file `release-keystore.jks.base64` |
+   | `RELEASE_KEYSTORE_PASSWORD` | password keystore |
+   | `RELEASE_KEY_ALIAS` | `puzzle-rosdie` (atau alias Anda) |
+   | `RELEASE_KEY_PASSWORD` | password key |
+
+4. Hapus file `.base64` setelah disalin; simpan cadangan keystore + password di tempat aman.
+   Kehilangan keystore berarti update berikutnya tidak bisa dipasang di atas versi lama.
+
+**Membuat rilis**:
+- Tag: `git tag v1.0.1 && git push origin v1.0.1` → APK `puzzle-rosdie-v1.0.1.apk` (+ `.sha256`)
+  terbit di GitHub Releases dan sebagai artifact.
+- Manual: tab **Actions → Release APK → Run workflow**, isi versi (mis. `1.0.1`); centang
+  "Buat GitHub Release" bila ingin langsung diterbitkan, jika tidak APK hanya tersedia sebagai artifact.
+
+Bila salah satu secret belum diisi, workflow berhenti dengan pesan yang menyebut secret mana yang kurang
+(tidak diam-diam menghasilkan APK tanpa tanda tangan).
+
 ## Struktur
 
 ```
@@ -133,7 +165,8 @@ app/
   src/androidTest/               Smoke test, satu permainan sampai menang, validasi migrasi Room
   schemas/                       Skema Room yang diekspor (untuk migrasi)
 gradle/libs.versions.toml        Version catalog
-scripts/create-release-keystore.sh
+scripts/create-release-keystore.sh, scripts/export-github-secrets.sh
+.github/workflows/release-apk.yml   Build APK rilis bertanda tangan + versi (lihat Rilis otomatis)
 keystore.properties.example
 ```
 
