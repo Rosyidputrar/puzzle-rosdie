@@ -231,7 +231,7 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
                         labels[DateKeys.dayOfWeekMondayFirst(d.epochDay)],
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (i == days.lastIndex) FontWeight.Bold else null,
-                        color = if (i == days.lastIndex) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                        color = if (i == days.lastIndex) accentTextColor() else Color.Unspecified,
                     )
                     Text("${d.wins}/${d.games}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
