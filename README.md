@@ -34,6 +34,21 @@ Puzzle Rosdie. Tanpa WebView, tanpa iklan, tanpa akun, tanpa server, tanpa pelac
 - **Tampilan**: tema terang/gelap/sistem, warna dinamis Android 12+, landscape (papan kiri, panel kanan),
   adaptive icon + ikon monokrom (themed icon Android 13+), Splash Screen API + animasi tile menyusun diri.
 
+## Sistem desain
+
+Komponen kustom di `ui/components/DesignKit.kt` dan `ResultDialog.kt` menggantikan komponen bawaan
+yang polos, semuanya diturunkan dari skema warna aktif (ikut tema gelap dan warna dinamis):
+
+- `PillSelector` — pemilih bersegmen dengan indikator yang meluncur (kesulitan, mode, tema, bahasa).
+- `HudStat` — statistik permainan dengan angka tabular (tidak "bergoyang") dan bilah progres tipis.
+- `DockAction` — dock kontrol permainan; `GradientButton` — aksi utama; `AppSlider` — slider bertrack penuh.
+- `SectionCard` + `IconBadge` — kartu seksi dengan ikon bernada warna; `ProgressRing`; `ResultDialog`.
+- Shapes M3 lebih membulat (8/12/18/24/32 dp) agar serasi dengan tile papan.
+
+Fitur UX tambahan: meter dan penanda "tile sudah benar", tombol **Intip** (tahan untuk menumpuk
+susunan target di atas papan; untuk TalkBack ketuk dua kali), pratinjau papan di kartu Lanjutkan,
+hitung mundur Puzzle Harian, sapaan sesuai waktu, pemilih tema dengan pratinjau mini.
+
 ## Build
 
 Butuh JDK 17+ (diuji dengan JDK 21) dan Android SDK dengan platform 37 dan build-tools 37.0.0.

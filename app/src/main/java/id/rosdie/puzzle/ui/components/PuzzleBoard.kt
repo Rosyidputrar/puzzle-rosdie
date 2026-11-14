@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.components
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.RepeatMode
@@ -30,13 +32,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +64,7 @@ import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -97,6 +98,7 @@ fun PuzzleBoard(
     hintIndex: Int? = null,
     stiffnessFactor: Float = 1f,
     showNumbersOnImage: Boolean = true,
+    markCorrect: Boolean = false,
     onTap: (Int) -> Unit = {},
     onSwipe: (Direction) -> Unit = {},
     onDragCommit: (Int) -> Unit = {},
@@ -318,7 +320,7 @@ fun PuzzleBoard(
                             if (image != null) {
                                 ImageTile(image, v, n, showNumbersOnImage && tileDp >= 40.dp, badgeSize)
                             } else {
-                                NumberTile(v, numberSize)
+                                NumberTile(v, numberSize, markCorrect && correct, tileDp)
                             }
                             if (v == hintTile) HintGlow(tileShape)
                         }
@@ -342,7 +344,7 @@ private suspend fun animateBack(
 }
 
 @Composable
-private fun NumberTile(value: Int, fontSize: TextUnit) {
+private fun NumberTile(value: Int, fontSize: TextUnit, correct: Boolean, tileSize: Dp) {
     val c = MaterialTheme.colorScheme
     Box(
         Modifier
@@ -350,6 +352,18 @@ private fun NumberTile(value: Int, fontSize: TextUnit) {
             .background(Brush.verticalGradient(listOf(lerpColor(c.primary, Color.White, 0.16f), c.primary))),
         contentAlignment = Alignment.Center,
     ) {
+        // Penanda halus "sudah di tempatnya": titik di pojok kanan atas.
+        val dot by animateFloatAsState(if (correct) 1f else 0f, tween(220), label = "correctDot")
+        if (dot > 0f) {
+            Box(
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(tileSize * 0.09f)
+                    .size(tileSize * 0.09f)
+                    .graphicsLayer { scaleX = dot; scaleY = dot; alpha = dot }
+                    .background(c.onPrimary.copy(alpha = 0.85f), RoundedCornerShape(50)),
+            )
+        }
         Text(
             text = value.toString(),
             color = c.onPrimary,

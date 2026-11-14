@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 data class HomeUiState(
@@ -25,11 +26,27 @@ data class HomeUiState(
     val saved: SavedGame? = null,
     val settings: AppSettings = AppSettings(),
     val todayKey: Int = 0,
+    val customImages: Int = 0,
+    val achievementsUnlocked: Int = 0,
 )
 
-class HomeViewModel(games: GameRepository, settings: Flow<AppSettings>, time: TimeSource) : ViewModel() {
-    val state: StateFlow<HomeUiState> = combine(games.allResults, games.savedGame, settings) { results, saved, s ->
+class HomeViewModel(
+    games: GameRepository,
+    settings: Flow<AppSettings>,
+    time: TimeSource,
+    customImages: Flow<Int>,
+    achievements: Flow<Int>,
+) : ViewModel() {
+    val state: StateFlow<HomeUiState> = combine(
+        games.allResults,
+        games.savedGame,
+        settings,
+        customImages,
+        achievements,
+    ) { results, saved, s, images, unlocked ->
         HomeUiState(
+            customImages = images,
+            achievementsUnlocked = unlocked,
             loading = false,
             stats = StatsCalculator.compute(results, time.todayEpochDay()) { DateKeys.epochDayOf(it) },
             saved = saved,
@@ -42,7 +59,13 @@ class HomeViewModel(games: GameRepository, settings: Flow<AppSettings>, time: Ti
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val c = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as PuzzleApplication).container
-                HomeViewModel(c.games, c.settings, c.time)
+                HomeViewModel(
+                    c.games,
+                    c.settings,
+                    c.time,
+                    c.images.customImages.map { it.size },
+                    c.achievements.unlocked.map { it.size },
+                )
             }
         }
     }

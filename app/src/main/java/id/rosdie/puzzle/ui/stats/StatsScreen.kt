@@ -1,5 +1,6 @@
 package id.rosdie.puzzle.ui.stats
 
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,16 +19,21 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import id.rosdie.puzzle.ui.components.SectionCard
+import id.rosdie.puzzle.ui.components.Tone
+import id.rosdie.puzzle.ui.components.toneContainer
+import id.rosdie.puzzle.ui.components.toneContent
+import id.rosdie.puzzle.ui.theme.TabularNumbers
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -50,7 +56,6 @@ import id.rosdie.puzzle.data.repository.DayActivity
 import id.rosdie.puzzle.data.repository.StatsSummary
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.BackTopBar
-import id.rosdie.puzzle.ui.components.SectionTitle
 import id.rosdie.puzzle.ui.components.formatDecimal
 import id.rosdie.puzzle.ui.components.formatSecondsClock
 import id.rosdie.puzzle.ui.game.formatDateKey
@@ -73,8 +78,11 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = viewModel(factor
             val stats = state.stats
             if (stats != null) {
                 SummaryCard(stats, m)
-                PerGridCard(stats, m)
-                WeekChartCard(stats.last7Days, m)
+                // Tanpa data cukup satu empty state; kartu detail muncul setelah ada permainan.
+                if (stats.hasGames) {
+                    PerGridCard(stats, m)
+                    WeekChartCard(stats.last7Days, m)
+                }
                 CalendarCard(state, viewModel::shiftMonth, m)
             }
             AchievementsCard(state.unlocked, m)
@@ -83,52 +91,69 @@ fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = viewModel(factor
 }
 
 @Composable
-private fun StatCardShell(title: String, modifier: Modifier, content: @Composable () -> Unit) {
-    Card(modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.padding(16.dp)) {
-            SectionTitle(title)
-            Spacer(Modifier.height(10.dp))
-            content()
-        }
-    }
+private fun StatCardShell(title: String, modifier: Modifier, icon: ImageVector, tone: Tone, content: @Composable () -> Unit) {
+    SectionCard(title, modifier, icon = icon, tone = tone) { content() }
 }
 
 @Composable
 private fun SummaryCard(stats: StatsSummary, modifier: Modifier) {
-    StatCardShell(stringResource(R.string.stats_summary), modifier) {
+    StatCardShell(stringResource(R.string.stats_summary), modifier, AppIcons.BarChart, Tone.PRIMARY) {
         if (!stats.hasGames) {
             Text(stringResource(R.string.no_games_yet), color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@StatCardShell
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            BigNumber(stats.totalGames.toString(), stringResource(R.string.stats_total_games))
-            BigNumber(stats.totalWins.toString(), stringResource(R.string.stats_total_wins))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BigNumber(stats.totalGames.toString(), stringResource(R.string.stats_total_games), Tone.SECONDARY, Modifier.weight(1f))
+            BigNumber(stats.totalWins.toString(), stringResource(R.string.stats_total_wins), Tone.PRIMARY, Modifier.weight(1f))
             BigNumber(
                 stats.winRate?.let { "${(it * 100).roundToInt()}%" } ?: stringResource(R.string.value_none),
                 stringResource(R.string.stats_win_rate),
+                Tone.TERTIARY,
+                Modifier.weight(1f),
             )
         }
     }
 }
 
 @Composable
-private fun BigNumber(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.semantics(mergeDescendants = true) {}) {
-        Text(value, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
+private fun BigNumber(value: String, label: String, tone: Tone, modifier: Modifier) {
+    Surface(modifier, shape = MaterialTheme.shapes.medium, color = toneContainer(tone)) {
+        Column(
+            Modifier.padding(vertical = 14.dp, horizontal = 8.dp).semantics(mergeDescendants = true) {},
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(value, style = MaterialTheme.typography.headlineMedium.merge(TabularNumbers), color = toneContent(tone))
+            Text(label, style = MaterialTheme.typography.labelMedium, color = toneContent(tone), textAlign = TextAlign.Center, maxLines = 2)
+        }
     }
 }
 
 @Composable
 private fun PerGridCard(stats: StatsSummary, modifier: Modifier) {
-    StatCardShell(stringResource(R.string.stats_per_grid), modifier) {
+    StatCardShell(stringResource(R.string.stats_per_grid), modifier, AppIcons.Grid, Tone.SECONDARY) {
         val none = stringResource(R.string.value_none)
+        if (stats.perGrid.all { it.games == 0 }) {
+            Text(stringResource(R.string.no_games_yet), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            return@StatCardShell
+        }
         stats.perGrid.forEachIndexed { i, g ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            Text(stringResource(R.string.grid_label, g.gridSize, g.gridSize), style = MaterialTheme.typography.titleSmall)
-            if (g.games == 0) {
-                Text(stringResource(R.string.no_games_yet), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
+                    Text(
+                        stringResource(R.string.grid_label, g.gridSize, g.gridSize),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                    )
+                }
+                Spacer(Modifier.size(10.dp))
+                if (g.games == 0) {
+                    Text(stringResource(R.string.no_games_yet), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (g.games > 0) {
+                Spacer(Modifier.height(6.dp))
                 KeyValue(stringResource(R.string.stats_games_wins), stringResource(R.string.stats_games_wins_value, g.games, g.wins))
                 KeyValue(stringResource(R.string.stats_avg_moves), g.averageMoves?.let { formatDecimal(it) } ?: none)
                 KeyValue(stringResource(R.string.stats_avg_time), g.averageTimeSeconds?.let { formatSecondsClock(it.roundToInt().toLong()) } ?: none)
@@ -166,8 +191,13 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
         pluralStringResource(R.plurals.games_count, totalGames, totalGames),
         pluralStringResource(R.plurals.wins_count, totalWins, totalWins),
     )
-    StatCardShell(stringResource(R.string.stats_last7), modifier) {
+    StatCardShell(stringResource(R.string.stats_last7), modifier, AppIcons.BarChart, Tone.PRIMARY) {
+        if (totalGames == 0) {
+            Text(stringResource(R.string.stats_no_week), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            return@StatCardShell
+        }
         val primary = MaterialTheme.colorScheme.primary
+        val today = MaterialTheme.colorScheme.tertiary
         val track = MaterialTheme.colorScheme.primaryContainer
         val maxValue = (days.maxOfOrNull { it.games } ?: 0).coerceAtLeast(1)
         Canvas(
@@ -183,7 +213,7 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
                 val gamesH = size.height * d.games / maxValue
                 val winsH = size.height * d.wins / maxValue
                 drawRoundRect(track, Offset(x, size.height - gamesH), Size(barW, gamesH), CornerRadius(6.dp.toPx()))
-                drawRoundRect(primary, Offset(x, size.height - winsH), Size(barW, winsH), CornerRadius(6.dp.toPx()))
+                drawRoundRect(if (i == days.lastIndex) today else primary, Offset(x, size.height - winsH), Size(barW, winsH), CornerRadius(6.dp.toPx()))
                 if (d.games == 0) drawLine(track, Offset(x, size.height - 1), Offset(x + barW, size.height - 1), 2.dp.toPx())
             }
         }
@@ -211,7 +241,7 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
     val stats = state.stats ?: return
     val months = stringArrayResource(R.array.months_long)
     val dayLabels = stringArrayResource(R.array.days_short)
-    StatCardShell(stringResource(R.string.stats_daily_calendar), modifier) {
+    StatCardShell(stringResource(R.string.stats_daily_calendar), modifier, AppIcons.Calendar, Tone.TERTIARY) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onShift(-1) }) { Icon(AppIcons.ChevronLeft, stringResource(R.string.calendar_prev)) }
             Text(
@@ -242,7 +272,7 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
                             val key = state.calendarYear * 10_000 + state.calendarMonth * 100 + dayNum
                             val done = key in stats.dailyCompleted
                             val today = key == state.todayKey
-                            val bg = if (done) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
+                            val bg = if (done) MaterialTheme.colorScheme.primary else Color.Transparent
                             Box(
                                 Modifier
                                     .fillMaxSize()
@@ -280,7 +310,7 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
 
 @Composable
 private fun AchievementsCard(unlocked: Map<Achievement, Long>, modifier: Modifier) {
-    StatCardShell(stringResource(R.string.stats_achievements, unlocked.size, Achievement.entries.size), modifier) {
+    StatCardShell(stringResource(R.string.stats_achievements, unlocked.size, Achievement.entries.size), modifier, AppIcons.Trophy, Tone.TERTIARY) {
         Achievement.entries.forEachIndexed { i, a ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
             val ui = AchievementUi.of(a)
