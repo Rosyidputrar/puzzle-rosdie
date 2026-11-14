@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="a11y_board">Puzzle board %1$d×%2$d</string>
+    <string name="a11y_demo_board">Animated example board</string>
+    <string name="a11y_logo">Puzzle Rosdie logo</string>
+    <string name="a11y_move_tile">Slide this tile</string>
+    <string name="a11y_reference">Target arrangement</string>
+    <string name="a11y_stars">Star rating: %1$d/3</string>
+    <string name="a11y_tile">Tile %1$d, row %2$d, column %3$d</string>
+    <string name="a11y_tile_correct">In the correct position</string>
+    <string name="a11y_week_chart">7-day chart: %1$s, %2$s</string>
+    <string name="ach_challenge_win">Challenger</string>
+    <string name="ach_challenge_win_desc">Win a Move Target or Time Race</string>
+    <string name="ach_custom_image">Personal Gallery</string>
+    <string name="ach_custom_image_desc">Add your first custom image</string>
+    <string name="ach_fast_4x4">Efficient</string>
+    <string name="ach_fast_4x4_desc">Solve a 4×4 in under 100 moves</string>
+    <string name="ach_first_daily">New Routine</string>
+    <string name="ach_first_daily_desc">Complete your first Daily Puzzle</string>
+    <string name="ach_first_win_3x3">First Steps</string>
+    <string name="ach_first_win_3x3_desc">Win your first 3×3 puzzle</string>
+    <string name="ach_image_win">Artist\'s Eye</string>
+    <string name="ach_image_win_desc">Win a puzzle in image mode</string>
+    <string name="ach_pure_win">Pure</string>
+    <string name="ach_pure_win_desc">Win without AI and without hints</string>
+    <string name="ach_speed_3x3">Lightning</string>
+    <string name="ach_speed_3x3_desc">Solve a 3×3 in 30 seconds or less</string>
+    <string name="ach_streak_7">Full Week</string>
+    <string name="ach_streak_7_desc">7-day Daily Puzzle streak</string>
+    <string name="ach_ten_wins">Ten Wins</string>
+    <string name="ach_ten_wins_desc">Collect 10 wins</string>
+    <string name="ach_win_5x5">5×5 Conqueror</string>
+    <string name="ach_win_5x5_desc">Win a 5×5 puzzle</string>
+    <string name="achievement_locked">Locked</string>
+    <string name="achievement_unlocked_on">Unlocked %1$s</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_exit">Exit</string>
+    <string name="action_hint">Hint</string>
+    <string name="action_home">Home</string>
+    <string name="action_new_puzzle">New Puzzle</string>
+    <string name="action_next">Next</string>
+    <string name="action_ok">OK</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_play">Play</string>
+    <string name="action_play_again">Play Again</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_resume">Resume</string>
+    <string name="action_retry">Try Again</string>
+    <string name="action_share">Share</string>
+    <string name="action_shuffle">Shuffle</string>
+    <string name="action_solve_ai">Solve with AI</string>
+    <string name="action_start">Start</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_upload">Upload</string>
+    <string name="ai_5x5_note">For 5×5 the AI uses a staged strategy. The solution is not guaranteed to be the shortest.</string>
+    <string name="ai_active_states">Active states</string>
+    <string name="ai_bound">Current search bound: %1$s</string>
+    <string name="ai_budget_body">The optimal search has run for %1$s (%2$s iterations) and is not finished yet. The board is unchanged.</string>
+    <string name="ai_budget_title">This puzzle needs more time</string>
+    <string name="ai_calculating">calculating…</string>
+    <string name="ai_continue">Keep going</string>
+    <string name="ai_done_compare">AI: %1$s, you: %2$s</string>
+    <string name="ai_done_no_record">Games that use the AI do not count toward records.</string>
+    <string name="ai_done_not_optimal">The solution is not guaranteed to be the shortest.</string>
+    <string name="ai_done_optimal">This is an optimal solution (proven shortest from the position where the AI started).</string>
+    <string name="ai_done_title">The AI solved the puzzle</string>
+    <string name="ai_eta">Estimated remaining</string>
+    <string name="ai_eta_value">± %1$s</string>
+    <string name="ai_executing">AI is playing the solution: %1$d/%2$d</string>
+    <string name="ai_iterations">Iterations</string>
+    <string name="ai_not_optimal_label">Not guaranteed shortest</string>
+    <string name="ai_optimal_label">Optimal solution</string>
+    <string name="ai_quick_note">Quick Solution uses weighted A*: much faster, but not guaranteed to be the shortest.</string>
+    <string name="ai_quick_solve">Quick Solution</string>
+    <string name="ai_rate">Iterations per second</string>
+    <string name="ai_speed">AI speed</string>
+    <string name="ai_speed_fast">Fast</string>
+    <string name="ai_speed_normal">Normal</string>
+    <string name="ai_speed_slow">Slow</string>
+    <string name="ai_speed_value">%1$s · %2$d ms</string>
+    <string name="ai_speed_very_fast">Very Fast</string>
+    <string name="ai_thinking_time">Thinking time</string>
+    <string name="anim_fast">Fast</string>
+    <string name="anim_normal">Normal</string>
+    <string name="anim_slow">Slow</string>
+    <string name="builtin_bloom">Flower Garden</string>
+    <string name="builtin_mosaic">Mosaic</string>
+    <string name="builtin_night">Night City</string>
+    <string name="builtin_ocean">Blue Sea</string>
+    <string name="builtin_sunset">Mountain Sunset</string>
+    <string name="calendar_done">Daily Puzzle completed</string>
+    <string name="calendar_next">Next month</string>
+    <string name="calendar_prev">Previous month</string>
+    <string name="challenge_normal">Classic</string>
+    <string name="challenge_normal_desc">No move or time limit</string>
+    <string name="challenge_target">Move Target</string>
+    <string name="challenge_target_desc">Solve within %1$s</string>
+    <string name="challenge_time">Time Race</string>
+    <string name="challenge_time_desc">Solve before %1$s runs out</string>
+    <string name="click_pop">Pop</string>
+    <string name="click_soft">Soft</string>
+    <string name="click_wood">Wood</string>
+    <string name="crop_a11y">Crop area. Drag with one finger, pinch to zoom.</string>
+    <string name="crop_confirm">Use</string>
+    <string name="crop_footer">The image is saved as a 1024 px square and compressed, only on this device.</string>
+    <string name="crop_hint">Drag and pinch to choose a square area</string>
+    <string name="crop_title">Crop image</string>
+    <string name="date_format">%2$s %1$d, %3$d</string>
+    <string name="delete_step1_body">All history, records, achievements, streaks, saved games, custom images, and settings will be removed from this device.</string>
+    <string name="delete_step1_title">Delete all data?</string>
+    <string name="delete_step2_body">This cannot be undone. The data is not backed up anywhere.</string>
+    <string name="delete_step2_confirm">Yes, delete permanently</string>
+    <string name="delete_step2_title">Are you sure?</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="difficulty_normal">Normal</string>
+    <string name="gallery_add_camera">Camera</string>
+    <string name="gallery_add_gallery">From Gallery</string>
+    <string name="gallery_builtin">Built-in images</string>
+    <string name="gallery_delete_body">This image will be removed from the device. A saved game that uses it will switch to number mode.</string>
+    <string name="gallery_delete_title">Delete image?</string>
+    <string name="gallery_empty">No images yet. Add one from your gallery or camera.</string>
+    <string name="gallery_formats">JPG, PNG, GIF (first frame), WebP · max 10 MB per file</string>
+    <string name="gallery_mine">Your images</string>
+    <string name="gallery_storage">Image storage: %1$s MB of %2$s MB</string>
+    <string name="gallery_storage_warning">Storage is almost full. Delete images you no longer use.</string>
+    <string name="gallery_use">Use in Puzzle</string>
+    <string name="game_title">Puzzle %1$d×%2$d</string>
+    <string name="game_title_daily">Daily Puzzle · %1$s</string>
+    <string name="grid_label">%1$d×%2$d</string>
+    <string name="home_best_moves">Best moves</string>
+    <string name="home_best_time">Best time</string>
+    <string name="home_continue">Continue game</string>
+    <string name="home_continue_body">%1$s · %2$s · %3$s</string>
+    <string name="home_continue_daily">Daily Puzzle %1$s · %2$s · %3$s</string>
+    <string name="home_daily">Daily Puzzle</string>
+    <string name="home_daily_body">The same 4×4 for every player today</string>
+    <string name="home_daily_done">Done for today. Come back tomorrow!</string>
+    <string name="home_record_note">Records only count wins without AI or hints.</string>
+    <string name="home_stats_title">Your stats</string>
+    <string name="home_streak">Daily streak</string>
+    <string name="home_tagline">Slide, arrange, solve.</string>
+    <string name="home_total_solved">Puzzles solved</string>
+    <string name="howto_ai_body">Tap Solve with AI. The AI uses Manhattan Distance + Linear Conflict. For 3×3 and 4×4 the solution is optimal; if a 4×4 takes too long you can keep going or pick Quick Solution. For 5×5 the AI works in stages and the solution is not guaranteed to be the shortest. A hint only highlights the next tile.</string>
+    <string name="howto_ai_chip">AI is playing</string>
+    <string name="howto_ai_title">AI Solver</string>
+    <string name="howto_corner_body">The last two tiles of a row are the hardest. Put the last tile in the corner first, the one before it just below, then rotate both into place together.</string>
+    <string name="howto_corner_title">Corner Technique</string>
+    <string name="howto_first_row_body">Solve the top row first, then the left column. Leave them alone afterwards; what remains is a smaller puzzle.</string>
+    <string name="howto_first_row_title">First Row Strategy</string>
+    <string name="howto_gesture_drag">Drag</string>
+    <string name="howto_gesture_swipe">Swipe</string>
+    <string name="howto_gesture_tap">Tap</string>
+    <string name="howto_goal_body">Arrange the tiles in order starting from 1, with the empty slot in the bottom-right corner. In image mode, arrange the pieces until the picture is whole.</string>
+    <string name="howto_goal_title">Goal</string>
+    <string name="howto_move_body">Tap a tile next to the empty slot to slide it. Tap a tile in the same row or column to slide the whole line. You can also swipe on the board toward the empty slot, or drag a tile with your finger.</string>
+    <string name="howto_move_title">How to Move</string>
+    <string name="howto_pattern_body">Spot patterns: three tiles in a 2×2 block can rotate around the empty slot without disturbing anything else. This pattern is used again and again to move tiles into place.</string>
+    <string name="howto_pattern_title">Pattern Recognition</string>
+    <string name="howto_score_max">up to %1$s</string>
+    <string name="howto_score_more">more than %1$s</string>
+    <string name="howto_scoring_body">Stars are based on moves only. Time is used for records. Games that use the AI or a hint do not count toward records. Undo still counts as a move.</string>
+    <string name="howto_scoring_title">Scoring</string>
+    <string name="howto_step">%1$d/%2$d</string>
+    <string name="howto_try_now">Try It Now</string>
+    <string name="image_custom">Your image</string>
+    <string name="image_error_corrupt">The image file is damaged or cannot be read.</string>
+    <string name="image_error_no_camera">There is no camera app on this device.</string>
+    <string name="image_error_not_found">The file was not found or access was denied.</string>
+    <string name="image_error_storage_full">Image storage has reached 50 MB. Delete some images first.</string>
+    <string name="image_error_title">Image can\'t be used</string>
+    <string name="image_error_too_large">The file is larger than 10 MB.</string>
+    <string name="image_error_too_small">The image is too small (at least 64 × 64 pixels).</string>
+    <string name="image_error_unsupported">Unsupported format. Use JPG, PNG, GIF, or WebP.</string>
+    <string name="image_error_write_failed">Couldn\'t save the image. Device storage may be full.</string>
+    <string name="language_en">English</string>
+    <string name="language_id">Bahasa Indonesia</string>
+    <string name="language_system">Follow system</string>
+    <string name="licenses_body">Puzzle Rosdie is built with these open source components (Apache License 2.0): Kotlin and kotlinx.coroutines, kotlinx.serialization (JetBrains); AndroidX: Jetpack Compose, Material 3, Activity, Navigation, Lifecycle, Room, DataStore, Core, SplashScreen, AppCompat, ExifInterface (Google); Coil (Coil Contributors). Icon paths come from Material Icons (Google, Apache License 2.0). The built-in images and all sounds are generated in code.</string>
+    <string name="loading">Loading…</string>
+    <string name="lost_body">No worries. Try the same puzzle again or start a new one.</string>
+    <string name="lost_moves_title">Out of moves</string>
+    <string name="lost_time_title">Time\'s up</string>
+    <string name="mode_image">Image</string>
+    <string name="mode_numbers">Numbers</string>
+    <string name="msg_hint_failed">No hint is available for this position.</string>
+    <string name="msg_image_missing">Image not found. The puzzle switched to number mode.</string>
+    <string name="msg_saved_missing">No saved game was found. A new puzzle has started.</string>
+    <string name="msg_unsolvable">This position cannot be solved (inversion rule).</string>
+    <string name="nav_gallery">Image Gallery</string>
+    <string name="nav_howto">How to Play</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_stats">Stats &amp; Achievements</string>
+    <string name="no_games_yet">No games yet</string>
+    <string name="paused_body">The board is hidden while paused. The timer is stopped.</string>
+    <string name="paused_title">Paused</string>
+    <string name="phase_analyzing">Analyzing puzzle</string>
+    <string name="phase_deep_exploration">Deep exploration</string>
+    <string name="phase_deep_thinking">Deep thinking mode</string>
+    <string name="phase_searching">Searching for a path</string>
+    <string name="phase_searching_optimal">Searching for the optimal path</string>
+    <string name="reference_body_image">Arrange the pieces until the picture looks like this.</string>
+    <string name="reference_body_numbers">Put the numbers in order with the empty slot in the bottom-right.</string>
+    <string name="reference_hide">Hide reference</string>
+    <string name="reference_show">Show reference</string>
+    <string name="reference_title">Reference</string>
+    <string name="settings_about">About</string>
+    <string name="settings_animation">Animation speed</string>
+    <string name="settings_animation_note">When system animations are off, motion is kept to a minimum.</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_author">Made by</string>
+    <string name="settings_author_value">Rosdie</string>
+    <string name="settings_celebration">Win celebration</string>
+    <string name="settings_celebration_desc">Short fanfare and win vibration pattern</string>
+    <string name="settings_click_sound">Click sound</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_data_cleared">All data deleted.</string>
+    <string name="settings_data_desc">All data stays on this device. No accounts, servers, ads, or tracking.</string>
+    <string name="settings_delete_all">Delete all data</string>
+    <string name="settings_difficulty">Default difficulty</string>
+    <string name="settings_dynamic">Dynamic color</string>
+    <string name="settings_dynamic_desc">Follow your wallpaper colors (Android 12+)</string>
+    <string name="settings_dynamic_unsupported">Requires Android 12 or newer</string>
+    <string name="settings_game">Game</string>
+    <string name="settings_haptic_strength">Vibration strength</string>
+    <string name="settings_haptics">Vibration</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_licenses">Open source licenses</string>
+    <string name="settings_privacy">This app does not request internet or media permissions. Images are chosen with the Photo Picker.</string>
+    <string name="settings_reference">Reference panel</string>
+    <string name="settings_reference_desc">Show the target arrangement when a game starts</string>
+    <string name="settings_sound">Sound</string>
+    <string name="settings_sound_haptics">Sound &amp; Vibration</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_version">Version %1$s (%2$d)</string>
+    <string name="settings_volume">Volume</string>
+    <string name="setup_challenge">Game type</string>
+    <string name="setup_difficulty">Difficulty</string>
+    <string name="setup_mode">Mode</string>
+    <string name="setup_title">New puzzle</string>
+    <string name="share_text">I solved Puzzle Rosdie %1$s in %2$s and %3$s!</string>
+    <string name="stat_grid">Grid</string>
+    <string name="stat_moves">Moves</string>
+    <string name="stat_moves_left">Moves left</string>
+    <string name="stat_moves_per_minute">Moves/minute</string>
+    <string name="stat_seconds_per_move">Seconds/move</string>
+    <string name="stat_status">Status</string>
+    <string name="stat_time">Time</string>
+    <string name="stat_time_left">Time left</string>
+    <string name="stats_achievements">Achievements (%1$d/%2$d)</string>
+    <string name="stats_avg_moves">Average moves</string>
+    <string name="stats_avg_time">Average time</string>
+    <string name="stats_daily_calendar">Daily Puzzle calendar</string>
+    <string name="stats_games_wins">Played / won</string>
+    <string name="stats_games_wins_value">%1$d / %2$d</string>
+    <string name="stats_last7">Last 7 days</string>
+    <string name="stats_legend_games">Played</string>
+    <string name="stats_legend_wins">Won</string>
+    <string name="stats_per_grid">By grid size</string>
+    <string name="stats_record">Record</string>
+    <string name="stats_record_value">%1$s · %2$s</string>
+    <string name="stats_streak_summary">Current streak %1$s · best %2$s</string>
+    <string name="stats_summary">Summary</string>
+    <string name="stats_total_games">Games</string>
+    <string name="stats_total_wins">Wins</string>
+    <string name="stats_win_rate">Win rate</string>
+    <string name="status_ai_playing">AI playing</string>
+    <string name="status_ai_solved">Solved (AI)</string>
+    <string name="status_ai_thinking">AI thinking</string>
+    <string name="status_lost">Lost</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_playing">Playing</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_won">Solved</string>
+    <string name="strategy_astar">Optimal A*</string>
+    <string name="strategy_idastar">Optimal IDA*</string>
+    <string name="strategy_staged">Staged (rows &amp; columns)</string>
+    <string name="strategy_weighted">Quick Solution (weighted A*)</string>
+    <string name="streak_days_short">%1$d</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_system">Follow system</string>
+    <string name="value_none">—</string>
+    <string name="win_first_record">Your first record for this size!</string>
+    <string name="win_new_achievements">New achievements</string>
+    <string name="win_new_record">New Record!</string>
+    <string name="win_not_eligible">Not counted for records because the AI or a hint was used.</string>
+    <string name="win_record_moves">Previous best moves: %1$d</string>
+    <string name="win_record_time">Previous best time: %1$s</string>
+    <string name="win_subtitle">%1$s puzzle solved</string>
+    <string name="win_title">Well done!</string>
+    <string name="win_title_daily">Daily Puzzle complete!</string>
+    <plurals name="days_count">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="games_count">
+        <item quantity="one">%1$d game</item>
+        <item quantity="other">%1$d games</item>
+    </plurals>
+    <plurals name="moves_count">
+        <item quantity="one">%1$d move</item>
+        <item quantity="other">%1$d moves</item>
+    </plurals>
+    <plurals name="wins_count">
+        <item quantity="one">%1$d win</item>
+        <item quantity="other">%1$d wins</item>
+    </plurals>
+    <string-array name="days_short">
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+        <item>Sun</item>
+    </string-array>
+    <string-array name="months_long">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+    <string-array name="months_short">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+</resources>

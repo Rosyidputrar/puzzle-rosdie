@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 ke bawah: cadangkan database, preferensi, dan gambar pemain (semua lokal). -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="datastore/" />
+    <include domain="file" path="images/" />
+</full-backup-content>
