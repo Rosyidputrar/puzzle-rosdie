@@ -20,6 +20,12 @@ val Amber = Color(0xFFF59E0B)
 val OnAmber = Color(0xFF0F172A)
 val Success = Color(0xFF16A34A)
 
+/** Teks sukses/aksen yang lolos kontras di kedua tema (audit UI/UX 14 Nov 2026). */
+val SuccessTextLight = Color(0xFF15803D)
+val SuccessTextDark = Color(0xFF4ADE80)
+val AccentTextDark = Color(0xFF93C5FD)
+val ConfettiBlue = Color(0xFF93C5FD)
+
 private val Slate50 = Color(0xFFF8FAFC)
 private val Slate100 = Color(0xFFF1F5F9)
 private val Slate200 = Color(0xFFE2E8F0)

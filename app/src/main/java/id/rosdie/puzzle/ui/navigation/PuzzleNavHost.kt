@@ -1,18 +1,21 @@
 package id.rosdie.puzzle.ui.navigation
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import id.rosdie.puzzle.AppContainer
+import id.rosdie.puzzle.ui.components.rememberReducedMotion
 import id.rosdie.puzzle.ui.gallery.GalleryScreen
 import id.rosdie.puzzle.ui.game.GameScreen
 import id.rosdie.puzzle.ui.home.HomeScreen
@@ -20,6 +23,7 @@ import id.rosdie.puzzle.ui.howto.HowToScreen
 import id.rosdie.puzzle.ui.settings.SettingsScreen
 import id.rosdie.puzzle.ui.splash.SplashScreen
 import id.rosdie.puzzle.ui.stats.StatsScreen
+import kotlin.math.roundToInt
 
 @Composable
 fun PuzzleNavHost(
@@ -34,22 +38,30 @@ fun PuzzleNavHost(
     fun home() {
         if (!nav.popBackStack(HomeRoute, inclusive = false)) nav.navigate(HomeRoute) { popUpTo(0) }
     }
+    val settings by container.settings.collectAsStateWithLifecycle()
+    val reduceMotion = rememberReducedMotion()
+    // Satu sistem tween untuk semua transisi layar: durasi mengikuti kecepatan animasi di
+    // Pengaturan, dan hilang total bila animasi sistem dimatikan. Splash tetap fade-only
+    // karena ia pengambilalihan layar penuh, bukan perpindahan antar layar.
+    val navDuration = (300 / settings.animationSpeed.stiffnessFactor).roundToInt()
     NavHost(
         navController = nav,
         startDestination = if (showSplash) SplashRoute else HomeRoute,
-        // Transisi ala iOS: layar baru meluncur dari kanan, layar lama bergeser sedikit (parallax)
-        // dan meredup; kembali = kebalikannya. Spring membuatnya terasa luwes.
         enterTransition = {
-            slideInHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(tween(220))
+            if (reduceMotion) EnterTransition.None
+            else slideInHorizontally(tween(navDuration)) { it / 4 } + fadeIn(tween(navDuration))
         },
         exitTransition = {
-            slideOutHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeOut(tween(260))
+            if (reduceMotion) ExitTransition.None
+            else slideOutHorizontally(tween(navDuration)) { -it / 4 } + fadeOut(tween(navDuration))
         },
         popEnterTransition = {
-            slideInHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeIn(tween(260))
+            if (reduceMotion) EnterTransition.None
+            else slideInHorizontally(tween(navDuration)) { -it / 4 } + fadeIn(tween(navDuration))
         },
         popExitTransition = {
-            slideOutHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(tween(220))
+            if (reduceMotion) ExitTransition.None
+            else slideOutHorizontally(tween(navDuration)) { it / 4 } + fadeOut(tween(navDuration))
         },
     ) {
         composable<SplashRoute>(enterTransition = { fadeIn() }, exitTransition = { fadeOut(tween(250)) }) {
@@ -57,7 +69,7 @@ fun PuzzleNavHost(
                 nav.navigate(HomeRoute) { popUpTo(SplashRoute) { inclusive = true } }
             })
         }
-        composable<HomeRoute>(enterTransition = { fadeIn(tween(300)) }) {
+        composable<HomeRoute> {
             HomeScreen(
                 container = container,
                 onPlay = { nav.navigate(GameRoute.newGame(it)) },

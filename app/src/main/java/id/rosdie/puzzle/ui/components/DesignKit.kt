@@ -23,9 +23,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,6 +55,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import id.rosdie.puzzle.ui.theme.ButtonShape
 import id.rosdie.puzzle.ui.theme.CardShape
-import id.rosdie.puzzle.ui.theme.LocalDarkTheme
 
 /** Nada warna ikon: biru merek, netral, atau merah error. Amber tidak tersedia di sini (aksen). */
 enum class Tone { PRIMARY, NEUTRAL, ERROR }
@@ -79,7 +83,7 @@ fun AppCard(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val c = MaterialTheme.colorScheme
-    val border = if (LocalDarkTheme.current) null else BorderStroke(1.dp, c.outlineVariant)
+    val border = BorderStroke(1.dp, c.outlineVariant)
     Surface(
         modifier = if (onClick != null) {
             modifier.clip(shape).clickable(role = Role.Button, onClickLabel = onClickLabel, onClick = onClick)
@@ -134,11 +138,17 @@ fun SectionCard(
     }
 }
 
+/** Label seksi kecil di atas kontrol (dipakai Pengaturan + lembar setup). */
+@Composable
+fun Label(text: String, modifier: Modifier = Modifier) {
+    Text(text, style = MaterialTheme.typography.titleSmall, modifier = modifier.padding(bottom = 8.dp))
+}
+
 /** Bilah progres tipis, warna solid. */
 @Composable
 fun ThinBar(progress: Float, color: Color, modifier: Modifier = Modifier, height: Dp = 4.dp) {
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
-    Canvas(modifier.height(height)) {
+    Canvas(modifier.height(height).semantics { progressBarRangeInfo = ProgressBarRangeInfo(progress.coerceIn(0f, 1f), 0f..1f) }) {
         val r = CornerRadius(size.height / 2)
         drawRoundRect(track, cornerRadius = r)
         if (progress > 0f) drawRoundRect(color, size = Size(size.width * progress.coerceIn(0f, 1f), size.height), cornerRadius = r)
@@ -149,7 +159,7 @@ fun ThinBar(progress: Float, color: Color, modifier: Modifier = Modifier, height
 @Composable
 fun ProgressRing(progress: Float, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary, stroke: Dp = 6.dp) {
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
-    Canvas(modifier) {
+    Canvas(modifier.semantics { progressBarRangeInfo = ProgressBarRangeInfo(progress.coerceIn(0f, 1f), 0f..1f) }) {
         val w = stroke.toPx()
         val inset = w / 2
         val arcSize = Size(size.width - w, size.height - w)
@@ -169,11 +179,13 @@ fun <T> SegmentedSelector(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    height: Dp = 44.dp,
+    height: Dp = 52.dp,
     label: @Composable (T) -> String,
     sublabel: (@Composable (T) -> String)? = null,
 ) {
     val c = MaterialTheme.colorScheme
+    val reduceMotion = rememberReducedMotion()
+    val animDuration = if (reduceMotion) 0 else 180
     val index = options.indexOf(selected).coerceAtLeast(0)
     BoxWithConstraints(
         modifier
@@ -185,7 +197,7 @@ fun <T> SegmentedSelector(
             .graphicsLayer { alpha = if (enabled) 1f else 0.5f },
     ) {
         val segment = maxWidth / options.size
-        val x by animateDpAsState(segment * index, tween(180), label = "segment")
+        val x by animateDpAsState(segment * index, tween(animDuration), label = "segment")
         Box(
             Modifier
                 .offset { IntOffset(x.roundToPx(), 0) }
@@ -197,7 +209,7 @@ fun <T> SegmentedSelector(
         Row(Modifier.fillMaxWidth().selectableGroup()) {
             options.forEach { option ->
                 val isSelected = option == selected
-                val textColor by animateColorAsState(if (isSelected) c.onPrimary else c.onSurface, tween(180), label = "segmentText")
+                val textColor by animateColorAsState(if (isSelected) c.onPrimary else c.onSurface, tween(animDuration), label = "segmentText")
                 Column(
                     Modifier
                         .weight(1f)
@@ -228,6 +240,7 @@ fun ControlButton(
     enabled: Boolean = true,
     active: Boolean = false,
     loading: Boolean = false,
+    toggle: Boolean = false,
 ) {
     val c = MaterialTheme.colorScheme
     val content = when {
@@ -238,7 +251,10 @@ fun ControlButton(
     Column(
         modifier
             .clip(ButtonShape)
-            .selectable(selected = active, enabled = enabled, role = Role.Button, onClick = onClick)
+            .then(
+                if (toggle) Modifier.toggleable(value = active, enabled = enabled, role = Role.Button, onValueChange = { onClick() })
+                else Modifier.clickable(role = Role.Button, enabled = enabled, onClick = onClick)
+            )
             .background(if (active && enabled) c.primaryContainer else Color.Transparent)
             .padding(vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -251,7 +267,7 @@ fun ControlButton(
             }
         }
         Spacer(Modifier.height(4.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -310,7 +326,7 @@ fun SecondaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = ButtonShape,
-        modifier = modifier.heightIn(min = 48.dp),
+        modifier = modifier.heightIn(min = 52.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = contentColor),
     ) {
@@ -354,7 +370,7 @@ fun ConfirmDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
-            Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 if (icon != null) {
                     IconBadge(icon, tone = if (destructive) Tone.ERROR else Tone.PRIMARY, size = 48.dp)
                     Spacer(Modifier.height(14.dp))

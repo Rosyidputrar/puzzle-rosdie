@@ -3,6 +3,7 @@ package id.rosdie.puzzle.ui.home
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.graphics.Color
 import id.rosdie.puzzle.ui.components.AppCard
+import id.rosdie.puzzle.ui.components.Label
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.border
@@ -143,7 +144,6 @@ fun GameSetupSheet(
                 options = Difficulty.entries.map { it.size },
                 selected = size,
                 onSelect = { size = it },
-                height = 56.dp,
                 label = { difficultyLabel(it) },
                 sublabel = { stringResource(R.string.grid_label, it, it) },
             )
@@ -193,11 +193,6 @@ fun challengeName(c: ChallengeType): Int = when (c) {
     ChallengeType.NORMAL -> R.string.challenge_normal
     ChallengeType.TARGET_MOVES -> R.string.challenge_target
     ChallengeType.TIME_ATTACK -> R.string.challenge_time
-}
-
-@Composable
-private fun Label(text: String) {
-    Text(text, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(bottom = 8.dp))
 }
 
 @Composable

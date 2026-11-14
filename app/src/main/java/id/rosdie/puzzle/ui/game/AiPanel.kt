@@ -3,6 +3,13 @@ package id.rosdie.puzzle.ui.game
 import id.rosdie.puzzle.ui.components.AppCard
 import id.rosdie.puzzle.ui.components.SecondaryButton
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +44,7 @@ import id.rosdie.puzzle.domain.solver.ThinkingPhase
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.formatClock
 import id.rosdie.puzzle.ui.components.formatNumber
+import id.rosdie.puzzle.ui.components.rememberReducedMotion
 import kotlin.math.roundToInt
 
 @Composable
@@ -80,7 +88,7 @@ private fun phaseLabel(phase: ThinkingPhase, optimal: Boolean): Int = when (phas
     ThinkingPhase.DEEP_THINKING -> R.string.phase_deep_thinking
 }
 
-/** Panel AI: progres berpikir, anggaran habis, atau eksekusi solusi. */
+/** Panel AI: ajakan menyelesaikan, progres berpikir, anggaran habis, atau eksekusi solusi. */
 @Composable
 fun AiPanel(
     ai: AiUi,
@@ -90,17 +98,51 @@ fun AiPanel(
     onQuick: () -> Unit,
     onTogglePause: () -> Unit,
     onStop: () -> Unit,
+    onSolve: () -> Unit,
+    solveEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    if (ai is AiUi.Idle) return
+    val reduceMotion = rememberReducedMotion()
+    val d = if (reduceMotion) 0 else 200
     Column(modifier.fillMaxWidth()) {
-        AnimatedContent(targetState = ai, contentKey = { it::class }, label = "ai") { target ->
+        AnimatedContent(
+            targetState = ai,
+            contentKey = { it::class },
+            transitionSpec = {
+                (fadeIn(tween(d)) + scaleIn(tween(d), 0.98f))
+                    .togetherWith(fadeOut(tween(d)) + scaleOut(tween(d), 0.98f))
+                    .using(SizeTransform(clip = true) { _, _ -> tween(d) })
+            },
+            label = "ai",
+        ) { target ->
             when (target) {
                 is AiUi.Thinking -> ThinkingContent(target, gridSize, onCancel)
                 is AiUi.BudgetExceeded -> BudgetContent(target.progress, onContinue, onQuick, onCancel)
                 is AiUi.Executing -> ExecutingContent(target, onTogglePause, onStop)
-                AiUi.Idle -> Unit
+                AiUi.Idle -> IdleContent(gridSize, onSolve, solveEnabled)
             }
+        }
+    }
+}
+
+@Composable
+private fun IdleContent(gridSize: Int, onSolve: () -> Unit, solveEnabled: Boolean) {
+    Column {
+        PrimaryButton(
+            text = stringResource(R.string.action_solve_ai),
+            icon = null,
+            accent = true,
+            onClick = onSolve,
+            enabled = solveEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (gridSize == 5) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.ai_5x5_note),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

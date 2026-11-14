@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.components
 
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.TextUnit
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -25,3 +27,6 @@ fun formatDecimal(value: Double, digits: Int = 1, locale: Locale = Locale.getDef
 
 fun formatMegabytes(bytes: Long, locale: Locale = Locale.getDefault()): String =
     formatDecimal(bytes / (1024.0 * 1024.0), 1, locale)
+
+/** Ukuran font dalam px yang dibatasi skala font sistem maks 1.3x, agar angka tidak meluber dari tile. */
+fun cappedFontSize(px: Float, density: Density): TextUnit = with(density) { (px * minOf(fontScale, 1.3f)).toSp() }

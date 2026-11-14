@@ -4,10 +4,8 @@ import androidx.compose.foundation.border
 import id.rosdie.puzzle.ui.components.ThinBar
 import id.rosdie.puzzle.ui.theme.TabularNumbers
 import id.rosdie.puzzle.ui.theme.NumberFont
-import id.rosdie.puzzle.ui.theme.LocalDarkTheme
-import id.rosdie.puzzle.ui.theme.BrandBlueDark
-import id.rosdie.puzzle.ui.theme.BrandBlue
 import id.rosdie.puzzle.ui.theme.ButtonShape
+import id.rosdie.puzzle.ui.theme.tileBlue
 import id.rosdie.puzzle.ui.components.Tag
 import id.rosdie.puzzle.ui.components.AppCard
 import id.rosdie.puzzle.ui.components.SecondaryButton
@@ -15,12 +13,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
@@ -86,6 +86,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -95,6 +96,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -110,11 +113,14 @@ import id.rosdie.puzzle.domain.model.GameMode
 import id.rosdie.puzzle.domain.model.PuzzleState
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.PuzzleBoard
+import id.rosdie.puzzle.ui.components.cappedFontSize
 import id.rosdie.puzzle.ui.components.formatClock
+import id.rosdie.puzzle.ui.components.rememberReducedMotion
 import id.rosdie.puzzle.ui.gallery.rememberImageImport
 import id.rosdie.puzzle.ui.home.GameSetupSheet
 import id.rosdie.puzzle.ui.home.difficultyLabel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(
     container: AppContainer,
@@ -127,6 +133,7 @@ fun GameScreen(
     val settings by container.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
+    val sb = TopAppBarDefaults.pinnedScrollBehavior()
     var showSetup by rememberSaveable { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onAppBackgrounded() }
@@ -179,10 +186,12 @@ fun GameScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
+        modifier = Modifier.nestedScroll(sb.nestedScrollConnection),
         
         topBar = {
             GameTopBar(
                 title = title,
+                scrollBehavior = sb,
                 subtitle = subtitle,
                 showReference = state.showReference,
                 canEditSetup = !state.config.isDaily && !state.aiBusy,
@@ -372,6 +381,7 @@ private fun GameTopBar(
     onBack: () -> Unit,
     onToggleReference: () -> Unit,
     onSetup: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     TopAppBar(
         title = {
@@ -401,7 +411,8 @@ private fun GameTopBar(
                     Icon(AppIcons.Tune, contentDescription = stringResource(R.string.setup_title))
                 }
             }
-        },        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+        },        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer),
+        scrollBehavior = scrollBehavior,
     )
 }
 
@@ -472,10 +483,11 @@ private fun BoardArea(
             modifier = Modifier.fillMaxWidth(),
         )
         // Intip acuan: susunan target ditumpuk di atas papan selama tombol ditahan.
+        val reduceMotion = rememberReducedMotion()
         AnimatedVisibility(
             visible = peeking && state.status != GameStatus.PAUSED,
-            enter = fadeIn(),
-            exit = fadeOut(),
+            enter = if (reduceMotion) fadeIn(tween(0)) else fadeIn(),
+            exit = if (reduceMotion) fadeOut(tween(0)) else fadeOut(),
             modifier = Modifier.matchParentSize(),
         ) {
             TargetPreview(state.size, if (state.config.mode == GameMode.IMAGE) image else null, Modifier.fillMaxSize())
@@ -515,7 +527,6 @@ private fun DifficultySelector(state: GameUiState, onSelect: (Int) -> Unit, modi
         selected = state.size,
         onSelect = onSelect,
         enabled = !state.aiBusy,
-        height = 52.dp,
         label = { difficultyLabel(it) },
         sublabel = { stringResource(R.string.grid_label, it, it) },
         modifier = modifier,
@@ -535,6 +546,7 @@ private fun ControlDock(state: GameUiState, vm: GameViewModel, modifier: Modifie
                 onClick = vm::togglePause,
                 enabled = !state.aiBusy && (playing || paused),
                 active = paused,
+                toggle = true,
                 modifier = Modifier.weight(1f),
             )
             ControlButton(AppIcons.Shuffle, stringResource(R.string.action_shuffle), vm::shuffle, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
@@ -548,6 +560,7 @@ private fun ControlDock(state: GameUiState, vm: GameViewModel, modifier: Modifie
                 enabled = state.interactive && state.hint !is HintUi.Loading,
                 active = state.hint is HintUi.Tile,
                 loading = state.hint is HintUi.Loading,
+                toggle = true,
             )
             ControlButton(AppIcons.AddPhoto, stringResource(R.string.action_upload), onUpload, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
         }
@@ -564,27 +577,6 @@ private fun AiCard(state: GameUiState, vm: GameViewModel, modifier: Modifier = M
             Tag(stringResource(strategyLabel(strategy)))
         },
     ) {
-        AnimatedVisibility(visible = state.ai is AiUi.Idle) {
-            Column {
-                PrimaryButton(
-                    text = stringResource(R.string.action_solve_ai),
-                    icon = null,
-                    accent = true,
-                    onClick = vm::solveWithAi,
-                    enabled = !state.loading && (state.status == GameStatus.READY || state.status == GameStatus.PLAYING),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (state.size == 5) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        stringResource(R.string.ai_5x5_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-            }
-        }
         AiPanel(
             ai = state.ai,
             gridSize = state.size,
@@ -593,8 +585,10 @@ private fun AiCard(state: GameUiState, vm: GameViewModel, modifier: Modifier = M
             onQuick = vm::quickSolve,
             onTogglePause = vm::toggleAiExecutionPause,
             onStop = vm::stopAiExecution,
+            onSolve = vm::solveWithAi,
+            solveEnabled = !state.loading && (state.status == GameStatus.READY || state.status == GameStatus.PLAYING),
         )
-        if (state.ai !is AiUi.Idle) Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(12.dp))
         AiSpeedSlider(state.aiSpeedMs, vm::setAiSpeed)
     }
 }
@@ -628,6 +622,7 @@ private fun ReferenceStrip(state: GameUiState, image: ImageBitmap?, modifier: Mo
                     .border(1.dp, if (peekOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, ButtonShape)
                     .semantics {
                         role = Role.Switch
+                        toggleableState = ToggleableState(peekOn)
                         onClick(label = peekLabel) {
                             peekOn = !peekOn
                             onPeek(peekOn)
@@ -679,15 +674,15 @@ fun TargetPreview(size: Int, image: ImageBitmap?, modifier: Modifier = Modifier)
 private fun MiniNumberGrid(size: Int, modifier: Modifier) {
     val c = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer()
-    val tileBlue = if (LocalDarkTheme.current) BrandBlueDark else BrandBlue
+    val blue = tileBlue()
     Canvas(modifier.clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHighest).padding(3.dp)) {
         val cell = this.size.width / size
         val gap = cell * 0.08f
-        val style = TextStyle(color = Color.White, fontSize = (cell * 0.45f).toSp(), fontFamily = NumberFont, fontWeight = FontWeight.SemiBold)
+        val style = TextStyle(color = Color.White, fontSize = cappedFontSize(cell * 0.45f, this), fontFamily = NumberFont, fontWeight = FontWeight.SemiBold)
         for (i in 0 until size * size - 1) {
             val x = (i % size) * cell
             val y = (i / size) * cell
-            drawRoundRect(tileBlue, Offset(x + gap / 2, y + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.18f))
+            drawRoundRect(blue, Offset(x + gap / 2, y + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.18f))
             val text = measurer.measure((i + 1).toString(), style)
             drawText(text, topLeft = Offset(x + (cell - text.size.width) / 2, y + (cell - text.size.height) / 2))
         }

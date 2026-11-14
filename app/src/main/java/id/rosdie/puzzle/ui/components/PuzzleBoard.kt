@@ -67,10 +67,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.zIndex
 import id.rosdie.puzzle.R
 import id.rosdie.puzzle.ui.theme.NumberFont
-import id.rosdie.puzzle.ui.theme.LocalDarkTheme
 import id.rosdie.puzzle.ui.theme.CardShape
-import id.rosdie.puzzle.ui.theme.BrandBlueDark
-import id.rosdie.puzzle.ui.theme.BrandBlue
+import id.rosdie.puzzle.ui.theme.tileBlue
 import id.rosdie.puzzle.domain.engine.PuzzleEngine
 import id.rosdie.puzzle.domain.model.Direction
 import id.rosdie.puzzle.domain.model.PuzzleState
@@ -125,10 +123,10 @@ fun PuzzleBoard(
             // Radius tile tetap 12 dp (sedikit lebih kecil di 5x5 dan pratinjau mini).
             val corner = minOf(12.dp, with(density) { (tilePx * 0.16f).toDp() })
             val tileShape = RoundedCornerShape(corner)
-            // Ukuran angka proporsional dengan tile (juga di pratinjau kecil); toSp menetralkan
-            // skala font sistem agar angka tidak meluber dari tile.
-            val numberSize = with(density) { (tilePx * 0.40f).toSp() }
-            val badgeSize = with(density) { (tilePx * 0.13f).coerceAtLeast(9.dp.toPx()).toSp() }
+            // Ukuran angka proporsional dengan tile (juga di pratinjau kecil); skala font
+            // sistem dibatasi 1.3x agar angka tidak meluber dari tile.
+            val numberSize = cappedFontSize(tilePx * 0.40f, density)
+            val badgeSize = with(density) { cappedFontSize((tilePx * 0.13f).coerceAtLeast(9.dp.toPx()), density) }
 
             fun offsetFor(index: Int) = Offset((index % n) * cellPx + gapPx / 2, (index / n) * cellPx + gapPx / 2)
 
@@ -139,8 +137,7 @@ fun PuzzleBoard(
             val scope = rememberCoroutineScope()
             var dragTile by remember { mutableIntStateOf(0) }
             var dragOffset by remember { mutableStateOf(Offset.Zero) }
-            var shakeTile by remember { mutableIntStateOf(0) }
-            val shake = remember { Animatable(0f) }
+            val shakes = remember(n) { Array(n * n) { Animatable(0f) } }
             val moveSpec = spring<Offset>(dampingRatio = 0.74f, stiffness = Spring.StiffnessMedium * 0.6f * stiffnessFactor)
 
             val currentBoard by rememberUpdatedState(board)
@@ -226,10 +223,10 @@ fun PuzzleBoard(
                             when (mode) {
                                 0 -> {
                                     if (tile != 0 && PuzzleEngine.lineMoves(b, idx).isEmpty() && !reduceMotion) {
-                                        shakeTile = tile
                                         scope.launch {
-                                            shake.snapTo(0f)
-                                            shake.animateTo(0f, keyframes {
+                                            val s = shakes[tile]
+                                            s.snapTo(0f)
+                                            s.animateTo(0f, keyframes {
                                                 durationMillis = 260
                                                 7f at 40; -7f at 100; 4f at 160; -3f at 210
                                             })
@@ -312,7 +309,7 @@ fun PuzzleBoard(
                                     spotShadowColor = glow
                                     shape = tileShape
                                     clip = true
-                                    translationX = if (shakeTile == v) shake.value.dp.toPx() else 0f
+                                    translationX = shakes[v].value.dp.toPx()
                                 }
                                 .clearAndSetSemantics {
                                     contentDescription = desc
@@ -351,7 +348,7 @@ private suspend fun animateBack(
 
 @Composable
 private fun NumberTile(value: Int, fontSize: TextUnit, correct: Boolean, tileSize: Dp) {
-    val base = if (LocalDarkTheme.current) BrandBlueDark else BrandBlue
+    val base = tileBlue()
     Box(
         Modifier
             .fillMaxSize()

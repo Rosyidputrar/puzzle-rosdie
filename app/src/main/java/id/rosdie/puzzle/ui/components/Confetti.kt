@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -48,13 +49,15 @@ fun Confetti(modifier: Modifier = Modifier, colors: List<Color>, durationMs: Lon
         }
     }
     var elapsed by remember { mutableLongStateOf(0L) }
+    var finished by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val start = withFrameNanos { it }
         while (elapsed < durationMs) {
             withFrameNanos { elapsed = (it - start) / 1_000_000 }
         }
+        finished = true
     }
-    if (elapsed >= durationMs) return
+    if (finished) return
     Canvas(modifier) {
         val t = elapsed / 1000f
         val fade = ((durationMs / 1000f - t) / 0.6f).coerceIn(0f, 1f)

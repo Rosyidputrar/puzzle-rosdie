@@ -26,7 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import id.rosdie.puzzle.ui.components.SectionCard
 import id.rosdie.puzzle.ui.components.Tone
@@ -38,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -57,15 +61,19 @@ import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.BackTopBar
 import id.rosdie.puzzle.ui.components.formatDecimal
 import id.rosdie.puzzle.ui.components.formatSecondsClock
+import id.rosdie.puzzle.ui.theme.accentTextColor
 import id.rosdie.puzzle.ui.game.formatDateKey
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = viewModel(factory = StatsViewModel.Factory)) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val sb = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(stringResource(R.string.nav_stats), onBack) }) { padding ->
+        modifier = Modifier.nestedScroll(sb.nestedScrollConnection),
+        topBar = { BackTopBar(stringResource(R.string.nav_stats), onBack, scrollBehavior = sb) }) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -125,7 +133,7 @@ private fun BigNumber(value: String, label: String, tone: Tone, modifier: Modifi
                 .semantics(mergeDescendants = true) {},
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(value, style = MaterialTheme.typography.headlineMedium.merge(TabularNumbers), color = if (tone == Tone.PRIMARY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+            Text(value, style = MaterialTheme.typography.headlineMedium.merge(TabularNumbers), color = if (tone == Tone.PRIMARY) accentTextColor() else MaterialTheme.colorScheme.onSurface)
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 2)
         }
     }
@@ -193,8 +201,8 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
             return@StatCardShell
         }
         val primary = MaterialTheme.colorScheme.primary
-        val today = MaterialTheme.colorScheme.primary
-        val track = MaterialTheme.colorScheme.primaryContainer
+        val track = MaterialTheme.colorScheme.surfaceContainerHighest
+        val onSurface = MaterialTheme.colorScheme.onSurface
         val maxValue = (days.maxOfOrNull { it.games } ?: 0).coerceAtLeast(1)
         Canvas(
             Modifier
@@ -209,14 +217,22 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
                 val gamesH = size.height * d.games / maxValue
                 val winsH = size.height * d.wins / maxValue
                 drawRoundRect(track, Offset(x, size.height - gamesH), Size(barW, gamesH), CornerRadius(6.dp.toPx()))
-                drawRoundRect(if (i == days.lastIndex) today else primary, Offset(x, size.height - winsH), Size(barW, winsH), CornerRadius(6.dp.toPx()))
+                drawRoundRect(primary, Offset(x, size.height - winsH), Size(barW, winsH), CornerRadius(6.dp.toPx()))
+                if (i == days.lastIndex) {
+                    drawRoundRect(onSurface, Offset(x, size.height - winsH), Size(barW, winsH), CornerRadius(6.dp.toPx()), style = Stroke(2.dp.toPx()))
+                }
                 if (d.games == 0) drawLine(track, Offset(x, size.height - 1), Offset(x + barW, size.height - 1), 2.dp.toPx())
             }
         }
         Row(Modifier.fillMaxWidth()) {
-            days.forEach { d ->
+            days.forEachIndexed { i, d ->
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(labels[DateKeys.dayOfWeekMondayFirst(d.epochDay)], style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        labels[DateKeys.dayOfWeekMondayFirst(d.epochDay)],
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = if (i == days.lastIndex) FontWeight.Bold else null,
+                        color = if (i == days.lastIndex) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                    )
                     Text("${d.wins}/${d.games}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -325,7 +341,7 @@ private fun AchievementsCard(unlocked: Map<Achievement, Long>, modifier: Modifie
                         if (at != null) stringResource(R.string.achievement_unlocked_on, formatDateKey(DateKeys.keyOf(at)))
                         else stringResource(R.string.achievement_locked),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (at != null) c.primary else c.outline,
+                        color = if (at != null) accentTextColor() else c.onSurfaceVariant,
                     )
                 }
             }

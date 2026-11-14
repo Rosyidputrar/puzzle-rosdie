@@ -13,6 +13,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -59,6 +60,18 @@ private val AppTypography = Typography().let { base ->
 
 /** True bila tema gelap aktif. */
 val LocalDarkTheme = staticCompositionLocalOf { false }
+
+/** Warna teks aksen yang lolos kontras: terang memakai BrandBlue, gelap memakai biru muda. */
+@Composable
+fun accentTextColor(): Color = if (LocalDarkTheme.current) AccentTextDark else BrandBlue
+
+/** Warna teks sukses yang lolos kontras di kedua tema. */
+@Composable
+fun successTextColor(): Color = if (LocalDarkTheme.current) SuccessTextDark else SuccessTextLight
+
+/** Biru tile: terang BrandBlue, gelap BrandBlueDark. */
+@Composable
+fun tileBlue(): Color = if (LocalDarkTheme.current) BrandBlueDark else BrandBlue
 
 /** Dynamic color tersedia di Android 12+; di bawahnya selalu memakai palet biru. */
 val supportsDynamicColor: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
