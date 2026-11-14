@@ -1,0 +1,78 @@
+package id.rosdie.puzzle.ui.navigation
+
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import id.rosdie.puzzle.AppContainer
+import id.rosdie.puzzle.ui.gallery.GalleryScreen
+import id.rosdie.puzzle.ui.game.GameScreen
+import id.rosdie.puzzle.ui.home.HomeScreen
+import id.rosdie.puzzle.ui.howto.HowToScreen
+import id.rosdie.puzzle.ui.settings.SettingsScreen
+import id.rosdie.puzzle.ui.splash.SplashScreen
+import id.rosdie.puzzle.ui.stats.StatsScreen
+
+@Composable
+fun PuzzleNavHost(
+    container: AppContainer,
+    showSplash: Boolean,
+    navController: NavHostController = rememberNavController(),
+) {
+    val nav = navController
+    fun back() {
+        if (!nav.popBackStack()) nav.navigate(HomeRoute)
+    }
+    fun home() {
+        if (!nav.popBackStack(HomeRoute, inclusive = false)) nav.navigate(HomeRoute) { popUpTo(0) }
+    }
+    NavHost(
+        navController = nav,
+        startDestination = if (showSplash) SplashRoute else HomeRoute,
+        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) + fadeIn(tween(280)) },
+        exitTransition = { fadeOut(tween(200)) },
+        popEnterTransition = { fadeIn(tween(220)) },
+        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(260)) + fadeOut(tween(260)) },
+    ) {
+        composable<SplashRoute>(enterTransition = { fadeIn() }, exitTransition = { fadeOut(tween(250)) }) {
+            SplashScreen(onFinished = {
+                nav.navigate(HomeRoute) { popUpTo(SplashRoute) { inclusive = true } }
+            })
+        }
+        composable<HomeRoute>(enterTransition = { fadeIn(tween(300)) }) {
+            HomeScreen(
+                container = container,
+                onPlay = { nav.navigate(GameRoute.newGame(it)) },
+                onResume = { nav.navigate(GameRoute(resume = true)) },
+                onDaily = { nav.navigate(GameRoute(daily = true)) },
+                onGallery = { nav.navigate(GalleryRoute) },
+                onStats = { nav.navigate(StatsRoute) },
+                onHowTo = { nav.navigate(HowToRoute) },
+                onSettings = { nav.navigate(SettingsRoute) },
+            )
+        }
+        composable<GameRoute> {
+            GameScreen(container = container, onBack = ::back, onHome = ::home)
+        }
+        composable<GalleryRoute> {
+            GalleryScreen(
+                container = container,
+                onBack = ::back,
+                onUseImage = { config -> nav.navigate(GameRoute.newGame(config)) { popUpTo(HomeRoute) } },
+            )
+        }
+        composable<StatsRoute> { StatsScreen(onBack = ::back) }
+        composable<HowToRoute> {
+            HowToScreen(
+                onBack = ::back,
+                onTryNow = { config -> nav.navigate(GameRoute.newGame(config)) { popUpTo(HomeRoute) } },
+            )
+        }
+        composable<SettingsRoute> { SettingsScreen(container = container, onBack = ::back) }
+    }
+}
