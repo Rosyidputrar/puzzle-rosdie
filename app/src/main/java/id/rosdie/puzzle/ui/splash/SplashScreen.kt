@@ -1,10 +1,10 @@
 package id.rosdie.puzzle.ui.splash
 
+import androidx.compose.foundation.background
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -32,8 +31,6 @@ import androidx.compose.ui.unit.dp
 import id.rosdie.puzzle.R
 import id.rosdie.puzzle.ui.components.rememberReducedMotion
 import id.rosdie.puzzle.ui.theme.BrandBlue
-import id.rosdie.puzzle.ui.theme.BrandBlueDark
-import id.rosdie.puzzle.ui.theme.BrandBlueLight
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -105,7 +102,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.linearGradient(listOf(BrandBlueLight, BrandBlue, BrandBlueDark))),
+            .background(BrandBlue),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {

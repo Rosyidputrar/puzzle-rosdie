@@ -16,6 +16,7 @@ captures/
 keystore.properties
 *.jks
 *.keystore
+*.jks.base64
 
 # Cadangan git bundle lokal
 *.bundle

@@ -1,5 +1,10 @@
 package id.rosdie.puzzle.ui.home
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.graphics.Color
+import id.rosdie.puzzle.ui.components.AppCard
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,24 +24,17 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +56,8 @@ import id.rosdie.puzzle.domain.model.Difficulty
 import id.rosdie.puzzle.domain.model.GameMode
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.BuiltInThumb
+import id.rosdie.puzzle.ui.components.PrimaryButton
+import id.rosdie.puzzle.ui.components.SegmentedSelector
 import id.rosdie.puzzle.ui.components.CustomThumb
 import id.rosdie.puzzle.ui.components.formatSecondsClock
 import id.rosdie.puzzle.ui.gallery.rememberImageImport
@@ -91,7 +91,12 @@ fun GameSetupSheet(
         mode = GameMode.IMAGE
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface,
+        scrimColor = Color.Black.copy(alpha = 0.6f),
+    ) {
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
@@ -102,16 +107,12 @@ fun GameSetupSheet(
             Spacer(Modifier.height(16.dp))
 
             Label(stringResource(R.string.setup_mode))
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                GameMode.entries.forEachIndexed { i, m ->
-                    SegmentedButton(
-                        selected = mode == m,
-                        onClick = { mode = m },
-                        shape = SegmentedButtonDefaults.itemShape(i, GameMode.entries.size),
-                        icon = { SegmentedButtonDefaults.Icon(mode == m) { Icon(if (m == GameMode.NUMBERS) AppIcons.Numbers else AppIcons.Image, null, Modifier.size(18.dp)) } },
-                    ) { Text(stringResource(if (m == GameMode.NUMBERS) R.string.mode_numbers else R.string.mode_image)) }
-                }
-            }
+            SegmentedSelector(
+                options = GameMode.entries.toList(),
+                selected = mode,
+                onSelect = { mode = it },
+                label = { stringResource(if (it == GameMode.NUMBERS) R.string.mode_numbers else R.string.mode_image) },
+            )
             if (mode == GameMode.IMAGE) {
                 Spacer(Modifier.height(12.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -138,21 +139,14 @@ fun GameSetupSheet(
 
             Spacer(Modifier.height(20.dp))
             Label(stringResource(R.string.setup_difficulty))
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                Difficulty.entries.forEachIndexed { i, d ->
-                    SegmentedButton(
-                        selected = size == d.size,
-                        onClick = { size = d.size },
-                        shape = SegmentedButtonDefaults.itemShape(i, Difficulty.entries.size),
-                        icon = {},
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(difficultyLabel(d.size))
-                            Text(stringResource(R.string.grid_label, d.size, d.size), style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
-                }
-            }
+            SegmentedSelector(
+                options = Difficulty.entries.map { it.size },
+                selected = size,
+                onSelect = { size = it },
+                height = 56.dp,
+                label = { difficultyLabel(it) },
+                sublabel = { stringResource(R.string.grid_label, it, it) },
+            )
 
             Spacer(Modifier.height(20.dp))
             Label(stringResource(R.string.setup_challenge))
@@ -184,18 +178,12 @@ fun GameSetupSheet(
             }
 
             Spacer(Modifier.height(20.dp))
-            Button(
-                onClick = {
-                    onStart(GameConfig(size, mode, imageId.takeIf { mode == GameMode.IMAGE }, challenge, null))
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-            ) {
-                Icon(AppIcons.Play, null)
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(R.string.action_start), style = MaterialTheme.typography.titleMedium)
-            }
+            PrimaryButton(
+                text = stringResource(R.string.action_start),
+                icon = AppIcons.Play,
+                onClick = { onStart(GameConfig(size, mode, imageId.takeIf { mode == GameMode.IMAGE }, challenge, null)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
             Spacer(Modifier.height(16.dp))
         }
     }
@@ -230,13 +218,8 @@ private fun ThumbChoice(selected: Boolean, label: String, onClick: () -> Unit, c
 @Composable
 private fun AddChoice(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.size(width = 80.dp, height = 104.dp)) {
-        Surface(
-            onClick = onClick,
-            shape = RoundedCornerShape(14.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.size(76.dp),
-        ) {
-            Box(contentAlignment = Alignment.Center) { Icon(icon, null) }
+        AppCard(Modifier.size(76.dp), shape = RoundedCornerShape(14.dp), onClick = onClick) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
         }
         Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }

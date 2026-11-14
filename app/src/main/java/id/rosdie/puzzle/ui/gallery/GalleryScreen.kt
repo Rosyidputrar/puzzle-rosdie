@@ -1,5 +1,10 @@
 package id.rosdie.puzzle.ui.gallery
 
+import id.rosdie.puzzle.ui.components.AppCard
+import id.rosdie.puzzle.ui.components.SecondaryButton
+import id.rosdie.puzzle.ui.components.ConfirmDialog
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,25 +24,24 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import id.rosdie.puzzle.ui.components.PrimaryButton
+import id.rosdie.puzzle.ui.components.ProgressRing
+import kotlin.math.roundToInt
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,7 +92,9 @@ fun GalleryScreen(
         onUseImage(GameConfig(state.difficultySize, GameMode.IMAGE, imageId, ChallengeType.NORMAL, null))
     }
 
-    Scaffold(topBar = { BackTopBar(stringResource(R.string.nav_gallery), onBack) }) { padding ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { BackTopBar(stringResource(R.string.nav_gallery), onBack) }) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 104.dp),
             modifier = Modifier
@@ -102,16 +108,8 @@ fun GalleryScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     StorageCard(state)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(onClick = importer.pickFromGallery, modifier = Modifier.weight(1f)) {
-                            Icon(AppIcons.AddPhoto, null, Modifier.size(18.dp))
-                            Spacer(Modifier.size(8.dp))
-                            Text(stringResource(R.string.gallery_add_gallery))
-                        }
-                        FilledTonalButton(onClick = importer.takePhoto, modifier = Modifier.weight(1f)) {
-                            Icon(AppIcons.Camera, null, Modifier.size(18.dp))
-                            Spacer(Modifier.size(8.dp))
-                            Text(stringResource(R.string.gallery_add_camera))
-                        }
+                        SecondaryButton(stringResource(R.string.gallery_add_gallery), importer.pickFromGallery, Modifier.weight(1f).heightIn(min = 56.dp), icon = AppIcons.AddPhoto)
+                        SecondaryButton(stringResource(R.string.gallery_add_camera), importer.takePhoto, Modifier.weight(1f).heightIn(min = 56.dp), icon = AppIcons.Camera)
                     }
                     Text(
                         stringResource(R.string.gallery_formats),
@@ -120,13 +118,22 @@ fun GalleryScreen(
                     )
                     SectionTitle(stringResource(R.string.gallery_mine))
                     if (state.images.isEmpty()) {
-                        Text(stringResource(R.string.gallery_empty), style = MaterialTheme.typography.bodyMedium)
+                        // Empty state jujur: jelaskan kenapa kosong dan beri aksi langsung.
+                        AppCard(Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text(stringResource(R.string.gallery_empty_title), style = MaterialTheme.typography.titleSmall)
+                                Spacer(Modifier.height(4.dp))
+                                Text(stringResource(R.string.gallery_empty), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.height(12.dp))
+                                PrimaryButton(stringResource(R.string.gallery_add_image), AppIcons.AddPhoto, importer.pickFromGallery, Modifier.fillMaxWidth())
+                            }
+                        }
                     }
                 }
             }
             items(state.images, key = { it.id }) { img ->
                 val label = stringResource(R.string.image_custom)
-                GridThumb(label, onClick = { selected = Selected.Custom(img) }) {
+                GridThumb(label, tag = null, onClick = { selected = Selected.Custom(img) }) {
                     CustomThumb(img, label, Modifier.fillMaxSize())
                 }
             }
@@ -135,7 +142,7 @@ fun GalleryScreen(
             }
             items(BuiltInImage.entries, key = { it.key }) { img ->
                 val title = stringResource(img.titleRes)
-                GridThumb(title, onClick = { selected = Selected.BuiltIn(img) }) {
+                GridThumb(title, tag = null, onClick = { selected = Selected.BuiltIn(img) }) {
                     BuiltInThumb(img, container.images, title, Modifier.fillMaxSize())
                 }
             }
@@ -158,61 +165,77 @@ fun GalleryScreen(
     }
 
     confirmDelete?.let { img ->
-        AlertDialog(
-            onDismissRequest = { confirmDelete = null },
-            icon = { Icon(AppIcons.Delete, null) },
-            title = { Text(stringResource(R.string.gallery_delete_title)) },
-            text = { Text(stringResource(R.string.gallery_delete_body)) },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.delete(img.id)
-                    confirmDelete = null
-                    selected = null
-                }) { Text(stringResource(R.string.action_delete)) }
+        ConfirmDialog(
+            title = stringResource(R.string.gallery_delete_title),
+            text = stringResource(R.string.gallery_delete_body),
+            confirmText = stringResource(R.string.action_delete),
+            onConfirm = {
+                viewModel.delete(img.id)
+                confirmDelete = null
+                selected = null
             },
-            dismissButton = { TextButton(onClick = { confirmDelete = null }) { Text(stringResource(R.string.action_cancel)) } },
+            onDismiss = { confirmDelete = null },
+            icon = AppIcons.Delete,
+            dismissText = stringResource(R.string.action_cancel),
+            destructive = true,
         )
     }
 }
 
 @Composable
 private fun StorageCard(state: GalleryUiState) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
-        Column(Modifier.padding(16.dp).fillMaxWidth()) {
-            Text(
-                stringResource(
-                    R.string.gallery_storage,
-                    formatMegabytes(state.usageBytes),
-                    formatMegabytes(ImageRepository.MAX_TOTAL_BYTES),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { state.usageFraction },
-                modifier = Modifier.fillMaxWidth(),
-                color = if (state.nearlyFull) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            )
-            if (state.nearlyFull) {
-                Spacer(Modifier.height(6.dp))
+    val c = MaterialTheme.colorScheme
+    AppCard {
+        Row(Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                ProgressRing(state.usageFraction, Modifier.fillMaxSize(), color = if (state.nearlyFull) c.error else c.primary)
+                Text("${(state.usageFraction * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge)
+            }
+            Spacer(Modifier.size(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.gallery_storage_title), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    stringResource(R.string.gallery_storage_warning),
+                    stringResource(R.string.gallery_storage, formatMegabytes(state.usageBytes), formatMegabytes(ImageRepository.MAX_TOTAL_BYTES)),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = c.onSurfaceVariant,
                 )
+                if (state.nearlyFull) {
+                    Text(stringResource(R.string.gallery_storage_warning), style = MaterialTheme.typography.bodySmall, color = c.error)
+                }
             }
         }
     }
 }
 
 @Composable
-private fun GridThumb(label: String, onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun GridThumb(label: String, tag: String?, onClick: () -> Unit, content: @Composable () -> Unit) {
     Box(
         Modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .clickable(onClickLabel = label, role = Role.Button, onClick = onClick),
-    ) { content() }
+    ) {
+        content()
+        // Scrim gradient + label agar thumbnail punya identitas, bukan sekadar kotak gambar.
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))))
+                .padding(start = 10.dp, end = 10.dp, top = 18.dp, bottom = 8.dp),
+        ) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, maxLines = 1)
+        }
+        if (tag != null) {
+            Surface(
+                shape = CircleShape,
+                color = Color.Black.copy(alpha = 0.45f),
+                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            ) {
+                Text(tag, style = MaterialTheme.typography.labelSmall, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+            }
+        }
+    }
 }
 
 @Composable
@@ -233,7 +256,7 @@ private fun PreviewDialog(
         is Selected.Custom -> stringResource(R.string.image_custom)
     }
     Dialog(onDismissRequest = onDismiss) {
-        Card(shape = MaterialTheme.shapes.extraLarge) {
+        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
             Column(Modifier.padding(16.dp).widthIn(max = 480.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))
@@ -252,19 +275,14 @@ private fun PreviewDialog(
                     }
                 }
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = onUse, modifier = Modifier.fillMaxWidth()) {
-                    Icon(AppIcons.Play, null, Modifier.size(18.dp))
-                    Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.gallery_use))
-                }
-                if (onDelete != null) {
-                    OutlinedButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
-                        Icon(AppIcons.Delete, null, Modifier.size(18.dp))
-                        Spacer(Modifier.size(8.dp))
-                        Text(stringResource(R.string.action_delete))
+                PrimaryButton(stringResource(R.string.gallery_use), AppIcons.Play, onUse, Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onDelete != null) {
+                        SecondaryButton(stringResource(R.string.action_delete), onDelete, Modifier.weight(1f), icon = AppIcons.Delete, contentColor = MaterialTheme.colorScheme.error)
                     }
+                    SecondaryButton(stringResource(R.string.action_close), onDismiss, Modifier.weight(1f), icon = AppIcons.Close)
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
             }
         }
     }

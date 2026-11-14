@@ -1,5 +1,10 @@
 package id.rosdie.puzzle.ui.howto
 
+import androidx.compose.foundation.layout.heightIn
+import id.rosdie.puzzle.ui.components.AppCard
+import id.rosdie.puzzle.ui.components.Tag
+import id.rosdie.puzzle.ui.components.PrimaryButton
+import id.rosdie.puzzle.ui.components.SecondaryButton
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
@@ -22,13 +27,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +40,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -92,7 +92,9 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
     }
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
-    Scaffold(topBar = { BackTopBar(stringResource(R.string.nav_howto), onBack) }) { padding ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { BackTopBar(stringResource(R.string.nav_howto), onBack) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             HorizontalPager(state = pager, modifier = Modifier.weight(1f)) { index ->
                 val page = pages[index]
@@ -138,25 +140,27 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
                 Modifier.fillMaxWidth().padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                OutlinedButton(
-                    onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
+                SecondaryButton(
+                    stringResource(R.string.action_previous),
+                    { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
+                    Modifier.weight(1f).heightIn(min = 56.dp),
+                    icon = AppIcons.ChevronLeft,
                     enabled = pager.currentPage > 0,
-                    modifier = Modifier.weight(1f),
-                ) { Text(stringResource(R.string.action_previous)) }
+                )
                 if (pager.currentPage < pages.size - 1) {
-                    Button(
-                        onClick = { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
-                        modifier = Modifier.weight(1f),
-                    ) { Text(stringResource(R.string.action_next)) }
+                    PrimaryButton(
+                        stringResource(R.string.action_next),
+                        AppIcons.ChevronRight,
+                        { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } },
+                        Modifier.weight(1f),
+                    )
                 } else {
-                    Button(
-                        onClick = { onTryNow(GameConfig(3, GameMode.NUMBERS, null, ChallengeType.NORMAL, null)) },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Icon(AppIcons.Play, null, Modifier.size(18.dp))
-                        Spacer(Modifier.size(6.dp))
-                        Text(stringResource(R.string.howto_try_now))
-                    }
+                    PrimaryButton(
+                        stringResource(R.string.howto_try_now),
+                        AppIcons.Play,
+                        { onTryNow(GameConfig(3, GameMode.NUMBERS, null, ChallengeType.NORMAL, null)) },
+                        Modifier.weight(1f),
+                    )
                 }
             }
         }
@@ -209,7 +213,7 @@ private fun DemoBoard(
         }
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        label(step)?.let { AssistChip(onClick = {}, label = { Text(stringResource(it)) }, leadingIcon = { Icon(AppIcons.TouchApp, null, Modifier.size(18.dp)) }) }
+        label(step)?.let { Tag(stringResource(it), Modifier.padding(bottom = 10.dp), icon = AppIcons.TouchApp) }
         val desc = stringResource(R.string.a11y_demo_board)
         Box(Modifier.fillMaxWidth().aspectRatio(1f).clearAndSetSemantics { contentDescription = desc }) {
             PuzzleBoard(board = board, interactive = false, modifier = Modifier.fillMaxSize())
@@ -308,7 +312,7 @@ private fun PatternDemo() {
 
 @Composable
 private fun ScoringTable() {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
+    AppCard {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             for (size in 3..5) {
                 val (three, two) = StarRating.thresholdsFor(size)

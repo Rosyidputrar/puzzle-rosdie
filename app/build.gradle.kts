@@ -23,8 +23,9 @@ android {
         applicationId = "id.rosdie.puzzle"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        // Versi bisa diisi dari CI: -PappVersionName=1.2.3 -PappVersionCode=10203.
+        versionCode = providers.gradleProperty("appVersionCode").map { it.toInt() }.orElse(1).get()
+        versionName = providers.gradleProperty("appVersionName").orElse("1.0.0").get()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
