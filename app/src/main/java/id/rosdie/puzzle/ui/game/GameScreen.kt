@@ -1,5 +1,16 @@
 package id.rosdie.puzzle.ui.game
 
+import androidx.compose.foundation.border
+import id.rosdie.puzzle.ui.components.ThinBar
+import id.rosdie.puzzle.ui.theme.TabularNumbers
+import id.rosdie.puzzle.ui.theme.NumberFont
+import id.rosdie.puzzle.ui.theme.LocalDarkTheme
+import id.rosdie.puzzle.ui.theme.BrandBlueDark
+import id.rosdie.puzzle.ui.theme.BrandBlue
+import id.rosdie.puzzle.ui.theme.ButtonShape
+import id.rosdie.puzzle.ui.components.Tag
+import id.rosdie.puzzle.ui.components.AppCard
+import id.rosdie.puzzle.ui.components.SecondaryButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.content.Intent
@@ -7,9 +18,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
@@ -19,11 +30,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import id.rosdie.puzzle.domain.model.ChallengeRules
 import id.rosdie.puzzle.domain.solver.PuzzleSolver
 import id.rosdie.puzzle.domain.solver.SolveMode
-import id.rosdie.puzzle.ui.components.DockAction
-import id.rosdie.puzzle.ui.components.GradientButton
-import id.rosdie.puzzle.ui.components.HudStat
+import id.rosdie.puzzle.ui.components.ControlButton
+import id.rosdie.puzzle.ui.components.PrimaryButton
 import id.rosdie.puzzle.ui.components.IconBadge
-import id.rosdie.puzzle.ui.components.PillSelector
+import id.rosdie.puzzle.ui.components.SegmentedSelector
 import id.rosdie.puzzle.ui.components.ResultDialog
 import id.rosdie.puzzle.ui.components.ResultStat
 import id.rosdie.puzzle.ui.components.SectionCard
@@ -62,13 +72,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +83,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -170,6 +178,8 @@ fun GameScreen(
     var peeking by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color.Transparent,
+        
         topBar = {
             GameTopBar(
                 title = title,
@@ -230,8 +240,8 @@ fun GameScreen(
                     Hud(state, content)
                     if (!state.config.isDaily) DifficultySelector(state, viewModel::changeDifficulty, content)
                     boardArea(content)
-                    if (state.showReference) ReferenceStrip(state, image, content) { peeking = it }
                     ControlDock(state, viewModel, content) { importer.pickFromGallery() }
+                    if (state.showReference) ReferenceStrip(state, image, content) { peeking = it }
                     AiCard(state, viewModel, content)
                     Spacer(Modifier.height(8.dp))
                 }
@@ -265,7 +275,8 @@ fun GameScreen(
     if (state.status == GameStatus.LOST) {
         ResultDialog(
             icon = AppIcons.Timer,
-            tone = Tone.ERROR,
+            iconTint = MaterialTheme.colorScheme.onErrorContainer,
+            iconBackground = MaterialTheme.colorScheme.errorContainer,
             title = stringResource(if (state.lossReason == LossReason.OUT_OF_TIME) R.string.lost_time_title else R.string.lost_moves_title),
             subtitle = stringResource(R.string.lost_body),
         ) {
@@ -275,19 +286,20 @@ fun GameScreen(
                 ResultStat(stringResource(R.string.stat_placed), placedLabel(state.board), Modifier.weight(1f))
             }
             Spacer(Modifier.height(20.dp))
-            GradientButton(stringResource(R.string.action_retry), AppIcons.Reset, viewModel::reset, Modifier.fillMaxWidth())
+            PrimaryButton(stringResource(R.string.action_retry), AppIcons.Reset, viewModel::reset, Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = viewModel::shuffle, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_play_again)) }
-                TextButton(onClick = onHome, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_home)) }
+                SecondaryButton(stringResource(R.string.action_play_again), viewModel::shuffle, Modifier.weight(1f), icon = AppIcons.Shuffle)
+                SecondaryButton(stringResource(R.string.action_home), onHome, Modifier.weight(1f), icon = AppIcons.Home)
             }
         }
     }
 
     state.aiSummary?.takeIf { state.status == GameStatus.AI_SOLVED }?.let { s ->
         ResultDialog(
-            icon = AppIcons.AutoAwesome,
-            tone = Tone.SECONDARY,
+            icon = AppIcons.Grid,
+            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+            iconBackground = MaterialTheme.colorScheme.primaryContainer,
             title = stringResource(R.string.ai_done_title),
             subtitle = stringResource(if (s.optimal) R.string.ai_done_optimal else R.string.ai_done_not_optimal),
         ) {
@@ -308,7 +320,7 @@ fun GameScreen(
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.ai_done_no_record), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
             Spacer(Modifier.height(20.dp))
-            GradientButton(
+            PrimaryButton(
                 stringResource(if (state.config.isDaily) R.string.action_retry else R.string.action_play_again),
                 if (state.config.isDaily) AppIcons.Reset else AppIcons.Shuffle,
                 { if (state.config.isDaily) viewModel.reset() else viewModel.shuffle() },
@@ -317,9 +329,9 @@ fun GameScreen(
             Spacer(Modifier.height(8.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!state.config.isDaily) {
-                    OutlinedButton(onClick = viewModel::reset, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_retry)) }
+                    SecondaryButton(stringResource(R.string.action_retry), viewModel::reset, Modifier.weight(1f), icon = AppIcons.Reset)
                 }
-                TextButton(onClick = onHome, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.action_home)) }
+                SecondaryButton(stringResource(R.string.action_home), onHome, Modifier.weight(1f), icon = AppIcons.Home)
             }
         }
     }
@@ -389,51 +401,49 @@ private fun GameTopBar(
                     Icon(AppIcons.Tune, contentDescription = stringResource(R.string.setup_title))
                 }
             }
-        },
+        },        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
     )
 }
 
-/** HUD: langkah, waktu, dan meter tile yang sudah benar. Angka tabular agar tidak bergoyang. */
+/**
+ * Statistik nyata dalam satu baris ringkas (bukan deretan kartu): langkah, waktu, dan tile
+ * yang sudah benar. Di mode tantangan, langkah/waktu diganti sisa dan berubah merah saat menipis.
+ */
 @Composable
 private fun Hud(state: GameUiState, modifier: Modifier = Modifier) {
     val total = state.board.cellCount - 1
     val placed = placedCount(state.board)
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        val remainingMoves = state.remainingMoves
-        if (remainingMoves != null) {
-            val target = ChallengeRules.targetMoves(state.size)
-            HudStat(
-                stringResource(R.string.stat_moves_left),
-                remainingMoves.toString(),
-                Modifier.weight(1f),
-                icon = AppIcons.Flag,
-                progress = remainingMoves / target.toFloat(),
-                warning = remainingMoves <= target / 10,
-            )
-        } else {
-            HudStat(stringResource(R.string.stat_moves), state.moves.toString(), Modifier.weight(1f), icon = AppIcons.Grid)
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            val remainingMoves = state.remainingMoves
+            if (remainingMoves != null) {
+                val target = ChallengeRules.targetMoves(state.size)
+                HudValue(stringResource(R.string.stat_moves_left), remainingMoves.toString(), warning = remainingMoves <= target / 10)
+            } else {
+                HudValue(stringResource(R.string.stat_moves), state.moves.toString())
+            }
+            val remainingTime = state.remainingTimeMs
+            if (remainingTime != null) {
+                HudValue(stringResource(R.string.stat_time_left), formatClock(remainingTime + 999), warning = remainingTime <= 15_000)
+            } else {
+                HudValue(stringResource(R.string.stat_time), formatClock(state.elapsedMs))
+            }
+            HudValue(stringResource(R.string.stat_placed), "$placed/$total", alignEnd = true)
         }
-        val remainingTime = state.remainingTimeMs
-        if (remainingTime != null) {
-            val limit = ChallengeRules.timeLimitSeconds(state.size) * 1000f
-            HudStat(
-                stringResource(R.string.stat_time_left),
-                formatClock(remainingTime + 999),
-                Modifier.weight(1f),
-                icon = AppIcons.Timer,
-                progress = remainingTime / limit,
-                warning = remainingTime <= 15_000,
-            )
-        } else {
-            HudStat(stringResource(R.string.stat_time), formatClock(state.elapsedMs), Modifier.weight(1f), icon = AppIcons.Timer)
-        }
-        HudStat(
-            stringResource(R.string.stat_placed),
-            "$placed/$total",
-            Modifier.weight(1f),
-            icon = AppIcons.Check,
-            progress = placed / total.toFloat(),
-        )
+        Spacer(Modifier.height(8.dp))
+        ThinBar(placed / total.toFloat(), MaterialTheme.colorScheme.primary, Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+private fun HudValue(label: String, value: String, warning: Boolean = false, alignEnd: Boolean = false) {
+    val c = MaterialTheme.colorScheme
+    Column(
+        Modifier.semantics(mergeDescendants = true) {},
+        horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = c.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.headlineSmall.merge(TabularNumbers), color = if (warning) c.error else c.onSurface)
     }
 }
 
@@ -475,7 +485,7 @@ private fun BoardArea(
                 Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                IconBadge(AppIcons.Pause, Tone.PRIMARY, size = 64.dp)
+                IconBadge(AppIcons.Pause, tone = Tone.PRIMARY, size = 64.dp)
                 Spacer(Modifier.height(12.dp))
                 Text(
                     stringResource(R.string.paused_title),
@@ -489,9 +499,9 @@ private fun BoardArea(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(20.dp))
-                GradientButton(stringResource(R.string.action_resume), AppIcons.Play, vm::resume, Modifier.widthIn(min = 200.dp))
-                Spacer(Modifier.height(8.dp))
-                TextButton(onClick = onExit) { Text(stringResource(R.string.action_exit)) }
+                PrimaryButton(stringResource(R.string.action_resume), AppIcons.Play, vm::resume, Modifier.widthIn(min = 200.dp))
+                Spacer(Modifier.height(10.dp))
+                SecondaryButton(stringResource(R.string.action_exit), onExit, Modifier.widthIn(min = 200.dp))
             }
         }
         if (state.loading) CircularProgressIndicator()
@@ -500,7 +510,7 @@ private fun BoardArea(
 
 @Composable
 private fun DifficultySelector(state: GameUiState, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
-    PillSelector(
+    SegmentedSelector(
         options = Difficulty.entries.map { it.size },
         selected = state.size,
         onSelect = onSelect,
@@ -517,9 +527,9 @@ private fun DifficultySelector(state: GameUiState, onSelect: (Int) -> Unit, modi
 private fun ControlDock(state: GameUiState, vm: GameViewModel, modifier: Modifier = Modifier, onUpload: () -> Unit) {
     val paused = state.status == GameStatus.PAUSED
     val playing = state.status == GameStatus.PLAYING || state.status == GameStatus.READY
-    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Row(Modifier.padding(horizontal = 4.dp, vertical = 4.dp)) {
-            DockAction(
+    Box(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth()) {
+            ControlButton(
                 icon = if (paused) AppIcons.Play else AppIcons.Pause,
                 label = stringResource(if (paused) R.string.action_play else R.string.action_pause),
                 onClick = vm::togglePause,
@@ -527,10 +537,10 @@ private fun ControlDock(state: GameUiState, vm: GameViewModel, modifier: Modifie
                 active = paused,
                 modifier = Modifier.weight(1f),
             )
-            DockAction(AppIcons.Shuffle, stringResource(R.string.action_shuffle), vm::shuffle, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
-            DockAction(AppIcons.Reset, stringResource(R.string.action_reset), vm::reset, Modifier.weight(1f), enabled = !state.aiBusy)
-            DockAction(AppIcons.Undo, stringResource(R.string.action_undo), vm::undo, Modifier.weight(1f), enabled = state.interactive && state.canUndo)
-            DockAction(
+            ControlButton(AppIcons.Shuffle, stringResource(R.string.action_shuffle), vm::shuffle, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
+            ControlButton(AppIcons.Reset, stringResource(R.string.action_reset), vm::reset, Modifier.weight(1f), enabled = !state.aiBusy)
+            ControlButton(AppIcons.Undo, stringResource(R.string.action_undo), vm::undo, Modifier.weight(1f), enabled = state.interactive && state.canUndo)
+            ControlButton(
                 AppIcons.Hint,
                 stringResource(R.string.action_hint),
                 vm::requestHint,
@@ -539,7 +549,7 @@ private fun ControlDock(state: GameUiState, vm: GameViewModel, modifier: Modifie
                 active = state.hint is HintUi.Tile,
                 loading = state.hint is HintUi.Loading,
             )
-            DockAction(AppIcons.AddPhoto, stringResource(R.string.action_upload), onUpload, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
+            ControlButton(AppIcons.AddPhoto, stringResource(R.string.action_upload), onUpload, Modifier.weight(1f), enabled = !state.aiBusy && !state.config.isDaily)
         }
     }
 }
@@ -550,23 +560,16 @@ private fun AiCard(state: GameUiState, vm: GameViewModel, modifier: Modifier = M
     SectionCard(
         title = stringResource(R.string.ai_card_title),
         modifier = modifier.fillMaxWidth(),
-        icon = AppIcons.AutoAwesome,
-        tone = Tone.TERTIARY,
         trailing = {
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
-                Text(
-                    stringResource(strategyLabel(strategy)),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                )
-            }
+            Tag(stringResource(strategyLabel(strategy)))
         },
     ) {
         AnimatedVisibility(visible = state.ai is AiUi.Idle) {
             Column {
-                GradientButton(
+                PrimaryButton(
                     text = stringResource(R.string.action_solve_ai),
-                    icon = AppIcons.AutoAwesome,
+                    icon = null,
+                    accent = true,
                     onClick = vm::solveWithAi,
                     enabled = !state.loading && (state.status == GameStatus.READY || state.status == GameStatus.PLAYING),
                     modifier = Modifier.fillMaxWidth(),
@@ -604,7 +607,7 @@ private fun AiCard(state: GameUiState, vm: GameViewModel, modifier: Modifier = M
 private fun ReferenceStrip(state: GameUiState, image: ImageBitmap?, modifier: Modifier = Modifier, onPeek: (Boolean) -> Unit) {
     var peekOn by remember { mutableStateOf(false) }
     val peekLabel = stringResource(R.string.reference_peek_a11y)
-    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    AppCard(modifier.fillMaxWidth()) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             TargetPreview(state.size, if (state.config.mode == GameMode.IMAGE) image else null, Modifier.size(64.dp))
             Spacer(Modifier.width(12.dp))
@@ -617,11 +620,12 @@ private fun ReferenceStrip(state: GameUiState, image: ImageBitmap?, modifier: Mo
                 )
             }
             Spacer(Modifier.width(8.dp))
-            Surface(
-                shape = CircleShape,
-                color = if (peekOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier
+            Box(
+                Modifier
                     .heightIn(min = 48.dp)
+                    .clip(ButtonShape)
+                    .background(if (peekOn) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .border(1.dp, if (peekOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, ButtonShape)
                     .semantics {
                         role = Role.Switch
                         onClick(label = peekLabel) {
@@ -641,7 +645,7 @@ private fun ReferenceStrip(state: GameUiState, image: ImageBitmap?, modifier: Mo
                     },
             ) {
                 Row(Modifier.padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val tint = if (peekOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+                    val tint = if (peekOn) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     Icon(AppIcons.Visibility, null, Modifier.size(18.dp), tint = tint)
                     Spacer(Modifier.width(6.dp))
                     Text(stringResource(R.string.reference_peek), style = MaterialTheme.typography.labelLarge, color = tint)
@@ -675,14 +679,15 @@ fun TargetPreview(size: Int, image: ImageBitmap?, modifier: Modifier = Modifier)
 private fun MiniNumberGrid(size: Int, modifier: Modifier) {
     val c = MaterialTheme.colorScheme
     val measurer = rememberTextMeasurer()
+    val tileBlue = if (LocalDarkTheme.current) BrandBlueDark else BrandBlue
     Canvas(modifier.clip(RoundedCornerShape(12.dp)).background(c.surfaceContainerHighest).padding(3.dp)) {
         val cell = this.size.width / size
         val gap = cell * 0.08f
-        val style = TextStyle(color = c.onPrimary, fontSize = (cell * 0.45f).toSp(), fontWeight = FontWeight.Bold)
+        val style = TextStyle(color = Color.White, fontSize = (cell * 0.45f).toSp(), fontFamily = NumberFont, fontWeight = FontWeight.SemiBold)
         for (i in 0 until size * size - 1) {
             val x = (i % size) * cell
             val y = (i / size) * cell
-            drawRoundRect(c.primary, Offset(x + gap / 2, y + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.18f))
+            drawRoundRect(tileBlue, Offset(x + gap / 2, y + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.18f))
             val text = measurer.measure((i + 1).toString(), style)
             drawText(text, topLeft = Offset(x + (cell - text.size.width) / 2, y + (cell - text.size.height) / 2))
         }

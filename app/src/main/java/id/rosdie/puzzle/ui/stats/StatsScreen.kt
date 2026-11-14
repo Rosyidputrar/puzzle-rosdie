@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.stats
 
+import id.rosdie.puzzle.ui.components.IconBadge
+import id.rosdie.puzzle.ui.components.Tag
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -24,13 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import id.rosdie.puzzle.ui.components.SectionCard
 import id.rosdie.puzzle.ui.components.Tone
-import id.rosdie.puzzle.ui.components.toneContainer
-import id.rosdie.puzzle.ui.components.toneContent
 import id.rosdie.puzzle.ui.theme.TabularNumbers
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -64,7 +63,9 @@ import kotlin.math.roundToInt
 @Composable
 fun StatsScreen(onBack: () -> Unit, viewModel: StatsViewModel = viewModel(factory = StatsViewModel.Factory)) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    Scaffold(topBar = { BackTopBar(stringResource(R.string.nav_stats), onBack) }) { padding ->
+    Scaffold(
+        containerColor = Color.Transparent,
+        topBar = { BackTopBar(stringResource(R.string.nav_stats), onBack) }) { padding ->
         Column(
             Modifier
                 .fillMaxSize()
@@ -103,12 +104,12 @@ private fun SummaryCard(stats: StatsSummary, modifier: Modifier) {
             return@StatCardShell
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            BigNumber(stats.totalGames.toString(), stringResource(R.string.stats_total_games), Tone.SECONDARY, Modifier.weight(1f))
+            BigNumber(stats.totalGames.toString(), stringResource(R.string.stats_total_games), Tone.NEUTRAL, Modifier.weight(1f))
             BigNumber(stats.totalWins.toString(), stringResource(R.string.stats_total_wins), Tone.PRIMARY, Modifier.weight(1f))
             BigNumber(
                 stats.winRate?.let { "${(it * 100).roundToInt()}%" } ?: stringResource(R.string.value_none),
                 stringResource(R.string.stats_win_rate),
-                Tone.TERTIARY,
+                Tone.PRIMARY,
                 Modifier.weight(1f),
             )
         }
@@ -117,20 +118,22 @@ private fun SummaryCard(stats: StatsSummary, modifier: Modifier) {
 
 @Composable
 private fun BigNumber(value: String, label: String, tone: Tone, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.medium, color = toneContainer(tone)) {
+    Box(modifier) {
         Column(
-            Modifier.padding(vertical = 14.dp, horizontal = 8.dp).semantics(mergeDescendants = true) {},
+            Modifier
+                .padding(vertical = 6.dp, horizontal = 4.dp)
+                .semantics(mergeDescendants = true) {},
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(value, style = MaterialTheme.typography.headlineMedium.merge(TabularNumbers), color = toneContent(tone))
-            Text(label, style = MaterialTheme.typography.labelMedium, color = toneContent(tone), textAlign = TextAlign.Center, maxLines = 2)
+            Text(value, style = MaterialTheme.typography.headlineMedium.merge(TabularNumbers), color = if (tone == Tone.PRIMARY) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, maxLines = 2)
         }
     }
 }
 
 @Composable
 private fun PerGridCard(stats: StatsSummary, modifier: Modifier) {
-    StatCardShell(stringResource(R.string.stats_per_grid), modifier, AppIcons.Grid, Tone.SECONDARY) {
+    StatCardShell(stringResource(R.string.stats_per_grid), modifier, AppIcons.Grid, Tone.NEUTRAL) {
         val none = stringResource(R.string.value_none)
         if (stats.perGrid.all { it.games == 0 }) {
             Text(stringResource(R.string.no_games_yet), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -139,14 +142,7 @@ private fun PerGridCard(stats: StatsSummary, modifier: Modifier) {
         stats.perGrid.forEachIndexed { i, g ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primary) {
-                    Text(
-                        stringResource(R.string.grid_label, g.gridSize, g.gridSize),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
-                    )
-                }
+                Tag(stringResource(R.string.grid_label, g.gridSize, g.gridSize))
                 Spacer(Modifier.size(10.dp))
                 if (g.games == 0) {
                     Text(stringResource(R.string.no_games_yet), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -197,7 +193,7 @@ private fun WeekChartCard(days: List<DayActivity>, modifier: Modifier) {
             return@StatCardShell
         }
         val primary = MaterialTheme.colorScheme.primary
-        val today = MaterialTheme.colorScheme.tertiary
+        val today = MaterialTheme.colorScheme.primary
         val track = MaterialTheme.colorScheme.primaryContainer
         val maxValue = (days.maxOfOrNull { it.games } ?: 0).coerceAtLeast(1)
         Canvas(
@@ -241,7 +237,7 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
     val stats = state.stats ?: return
     val months = stringArrayResource(R.array.months_long)
     val dayLabels = stringArrayResource(R.array.days_short)
-    StatCardShell(stringResource(R.string.stats_daily_calendar), modifier, AppIcons.Calendar, Tone.TERTIARY) {
+    StatCardShell(stringResource(R.string.stats_daily_calendar), modifier, AppIcons.Calendar, Tone.PRIMARY) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onShift(-1) }) { Icon(AppIcons.ChevronLeft, stringResource(R.string.calendar_prev)) }
             Text(
@@ -272,19 +268,18 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
                             val key = state.calendarYear * 10_000 + state.calendarMonth * 100 + dayNum
                             val done = key in stats.dailyCompleted
                             val today = key == state.todayKey
-                            val bg = if (done) MaterialTheme.colorScheme.primary else Color.Transparent
                             Box(
                                 Modifier
                                     .fillMaxSize()
-                                    .background(bg, CircleShape)
-                                    .then(if (today) Modifier.border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape) else Modifier)
+                                    .background(if (done) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape)
+                                    .then(if (today) Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
                                     .semantics { if (done) contentDescription = "$dayNum, $doneLabel" },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     dayNum.toString(),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = if (done) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    color = if (done) Color.White else MaterialTheme.colorScheme.onSurface,
                                 )
                             }
                         }
@@ -310,24 +305,17 @@ private fun CalendarCard(state: StatsUiState, onShift: (Int) -> Unit, modifier: 
 
 @Composable
 private fun AchievementsCard(unlocked: Map<Achievement, Long>, modifier: Modifier) {
-    StatCardShell(stringResource(R.string.stats_achievements, unlocked.size, Achievement.entries.size), modifier, AppIcons.Trophy, Tone.TERTIARY) {
+    StatCardShell(stringResource(R.string.stats_achievements, unlocked.size, Achievement.entries.size), modifier, AppIcons.Trophy, Tone.PRIMARY) {
         Achievement.entries.forEachIndexed { i, a ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
             val ui = AchievementUi.of(a)
             val at = unlocked[a]
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.semantics(mergeDescendants = true) {}) {
                 val c = MaterialTheme.colorScheme
-                Box(
-                    Modifier
-                        .size(44.dp)
-                        .background(if (at != null) c.tertiaryContainer else c.surfaceContainerHighest, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        if (at != null) ui.icon else AppIcons.Lock,
-                        null,
-                        tint = if (at != null) c.onTertiaryContainer else c.outline,
-                    )
+                if (at != null) {
+                    IconBadge(ui.icon, tone = Tone.PRIMARY, size = 44.dp)
+                } else {
+                    IconBadge(AppIcons.Lock, tone = Tone.NEUTRAL, size = 44.dp)
                 }
                 Spacer(Modifier.size(12.dp))
                 Column(Modifier.weight(1f)) {

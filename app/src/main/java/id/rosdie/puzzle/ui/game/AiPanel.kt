@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.game
 
+import id.rosdie.puzzle.ui.components.AppCard
+import id.rosdie.puzzle.ui.components.SecondaryButton
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,11 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,14 +24,9 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Surface
-import androidx.compose.ui.draw.clip
 import id.rosdie.puzzle.ui.components.AppSlider
-import id.rosdie.puzzle.ui.components.GradientButton
-import id.rosdie.puzzle.ui.components.IconBadge
+import id.rosdie.puzzle.ui.components.PrimaryButton
 import id.rosdie.puzzle.ui.components.ThinBar
-import id.rosdie.puzzle.ui.components.Tone
 import id.rosdie.puzzle.ui.theme.TabularNumbers
 import id.rosdie.puzzle.R
 import id.rosdie.puzzle.data.datastore.AppSettings
@@ -53,14 +47,7 @@ fun AiSpeedSlider(speedMs: Int, onChange: (Int) -> Unit, modifier: Modifier = Mo
             Icon(AppIcons.Speed, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.size(8.dp))
             Text(stringResource(R.string.ai_speed), style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer) {
-                Text(
-                    stringResource(R.string.ai_speed_value, label, speedMs),
-                    style = MaterialTheme.typography.labelMedium.merge(TabularNumbers),
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                )
-            }
+            Text(stringResource(R.string.ai_speed_value, label, speedMs), style = MaterialTheme.typography.labelLarge.merge(TabularNumbers))
         }
         AppSlider(
             value = speedMs.toFloat(),
@@ -124,8 +111,6 @@ private fun ThinkingContent(ai: AiUi.Thinking, gridSize: Int, onCancel: () -> Un
     val strategy = p?.strategy ?: PuzzleSolver.strategyFor(gridSize, ai.mode)
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            IconBadge(AppIcons.AutoAwesome, Tone.TERTIARY, size = 36.dp)
-            Spacer(Modifier.size(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     stringResource(phaseLabel(p?.phase ?: ThinkingPhase.ANALYZING, strategy.optimal)),
@@ -139,15 +124,9 @@ private fun ThinkingContent(ai: AiUi.Thinking, gridSize: Int, onCancel: () -> Un
             }
         }
         Spacer(Modifier.height(10.dp))
-        LinearProgressIndicator(Modifier.fillMaxWidth().clip(CircleShape))
-        Spacer(Modifier.height(10.dp))
         ProgressGrid(p)
         Spacer(Modifier.height(8.dp))
-        OutlinedButton(onClick = onCancel, modifier = Modifier.fillMaxWidth()) {
-            Icon(AppIcons.Close, null, Modifier.size(18.dp))
-            Spacer(Modifier.size(6.dp))
-            Text(stringResource(R.string.action_cancel))
-        }
+        SecondaryButton(stringResource(R.string.action_cancel), onCancel, Modifier.fillMaxWidth(), icon = AppIcons.Close)
     }
 }
 
@@ -183,7 +162,7 @@ private fun ProgressGrid(p: SolverProgress?) {
 
 @Composable
 private fun ProgressTile(label: String, value: String, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainerHighest) {
+    AppCard(modifier, shape = MaterialTheme.shapes.small) {
         Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).semantics(mergeDescendants = true) {}) {
             Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             Text(value, style = MaterialTheme.typography.titleSmall.merge(TabularNumbers), maxLines = 1)
@@ -201,15 +180,11 @@ private fun BudgetContent(p: SolverProgress, onContinue: () -> Unit, onQuick: ()
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(Modifier.height(12.dp))
-        GradientButton(stringResource(R.string.ai_quick_solve), AppIcons.Bolt, onQuick, Modifier.fillMaxWidth())
+        PrimaryButton(stringResource(R.string.ai_quick_solve), null, onQuick, Modifier.fillMaxWidth())
         Spacer(Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(onClick = onContinue, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.ai_continue))
-            }
-            OutlinedButton(onClick = onCancel, modifier = Modifier.weight(1f)) {
-                Text(stringResource(R.string.action_cancel))
-            }
+            SecondaryButton(stringResource(R.string.ai_continue), onContinue, Modifier.weight(1f), icon = AppIcons.Play)
+            SecondaryButton(stringResource(R.string.action_cancel), onCancel, Modifier.weight(1f), icon = AppIcons.Close)
         }
         Spacer(Modifier.height(4.dp))
         Text(stringResource(R.string.ai_quick_note), style = MaterialTheme.typography.bodySmall)
@@ -237,16 +212,13 @@ private fun ExecutingContent(ai: AiUi.Executing, onTogglePause: () -> Unit, onSt
         )
         Spacer(Modifier.height(10.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalButton(onClick = onTogglePause, modifier = Modifier.weight(1f)) {
-                Icon(if (ai.paused) AppIcons.Play else AppIcons.Pause, null, Modifier.size(18.dp))
-                Spacer(Modifier.size(6.dp))
-                Text(stringResource(if (ai.paused) R.string.action_resume else R.string.action_pause))
-            }
-            OutlinedButton(onClick = onStop, modifier = Modifier.weight(1f)) {
-                Icon(AppIcons.Stop, null, Modifier.size(18.dp))
-                Spacer(Modifier.size(6.dp))
-                Text(stringResource(R.string.action_stop))
-            }
+            SecondaryButton(
+                stringResource(if (ai.paused) R.string.action_resume else R.string.action_pause),
+                onTogglePause,
+                Modifier.weight(1f),
+                icon = if (ai.paused) AppIcons.Play else AppIcons.Pause,
+            )
+            SecondaryButton(stringResource(R.string.action_stop), onStop, Modifier.weight(1f), icon = AppIcons.Stop)
         }
     }
 }

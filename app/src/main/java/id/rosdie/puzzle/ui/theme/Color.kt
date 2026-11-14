@@ -4,86 +4,107 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-// Keluarga biru logo web: #60A5FA, #3B82F6, #1D4ED8.
-val BrandBlueLight = Color(0xFF60A5FA)
-val BrandBlue = Color(0xFF3B82F6)
+/*
+ * Palet Puzzle Rosdie (sengaja dibatasi):
+ * - Netral (dasar): slate. Terang #F8FAFC / putih / teks #0F172A, #64748B.
+ *   Gelap #0F172A / #1E293B / teks #F1F5F9.
+ * - Biru merek dari logo web, SOLID (tanpa gradien): #2563EB untuk tombol utama dan tile,
+ *   #1D4ED8 sebagai varian gelap.
+ * - Satu aksen: amber #F59E0B, HANYA untuk momen kunci: tombol AI Solver, bintang menang,
+ *   label Rekor Baru. Di Material ia dipetakan ke peran `tertiary`.
+ * - Hijau sukses dan merah error adalah warna sistem, bukan warna merek.
+ */
+val BrandBlue = Color(0xFF2563EB)
 val BrandBlueDark = Color(0xFF1D4ED8)
+val Amber = Color(0xFFF59E0B)
+val OnAmber = Color(0xFF0F172A)
+val Success = Color(0xFF16A34A)
 
-/** Palet M3 terang dari seed #3B82F6. Primary #1D4ED8 agar teks putih memenuhi WCAG AA (6,7:1). */
+private val Slate50 = Color(0xFFF8FAFC)
+private val Slate100 = Color(0xFFF1F5F9)
+private val Slate200 = Color(0xFFE2E8F0)
+private val Slate300 = Color(0xFFCBD5E1)
+private val Slate400 = Color(0xFF94A3B8)
+private val Slate500 = Color(0xFF64748B)
+private val Slate600 = Color(0xFF475569)
+private val Slate700 = Color(0xFF334155)
+private val Slate800 = Color(0xFF1E293B)
+private val Slate900 = Color(0xFF0F172A)
+
 val LightColors = lightColorScheme(
-    primary = Color(0xFF1D4ED8),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFDCE4FF),
-    onPrimaryContainer = Color(0xFF00174A),
-    inversePrimary = Color(0xFFB4C5FF),
-    secondary = Color(0xFF545E7C),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFDAE2FF),
-    onSecondaryContainer = Color(0xFF111B35),
-    tertiary = Color(0xFF7A5900),
-    onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFDEA6),
-    onTertiaryContainer = Color(0xFF261900),
-    error = Color(0xFFBA1A1A),
-    onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-    background = Color(0xFFF9F9FF),
-    onBackground = Color(0xFF1A1B21),
-    surface = Color(0xFFF9F9FF),
-    onSurface = Color(0xFF1A1B21),
-    surfaceVariant = Color(0xFFE1E2EC),
-    onSurfaceVariant = Color(0xFF44464F),
-    surfaceTint = Color(0xFF1D4ED8),
-    inverseSurface = Color(0xFF2F3036),
-    inverseOnSurface = Color(0xFFF0F0F7),
-    outline = Color(0xFF757780),
-    outlineVariant = Color(0xFFC5C6D0),
-    scrim = Color(0xFF000000),
-    surfaceBright = Color(0xFFF9F9FF),
-    surfaceDim = Color(0xFFD9D9E0),
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF3F3FA),
-    surfaceContainer = Color(0xFFEDEDF4),
-    surfaceContainerHigh = Color(0xFFE7E7EF),
-    surfaceContainerHighest = Color(0xFFE2E2E9),
+    primary = BrandBlue,
+    onPrimary = Color.White,
+    primaryContainer = Color(0xFFDBEAFE),
+    onPrimaryContainer = Color(0xFF1E3A8A),
+    inversePrimary = Color(0xFF93C5FD),
+    secondary = Slate600,
+    onSecondary = Color.White,
+    secondaryContainer = Slate100,
+    onSecondaryContainer = Slate900,
+    tertiary = Amber,
+    onTertiary = OnAmber,
+    tertiaryContainer = Color(0xFFFEF3C7),
+    onTertiaryContainer = Color(0xFF78350F),
+    error = Color(0xFFDC2626),
+    onError = Color.White,
+    errorContainer = Color(0xFFFEE2E2),
+    onErrorContainer = Color(0xFF7F1D1D),
+    background = Slate50,
+    onBackground = Slate900,
+    surface = Color.White,
+    onSurface = Slate900,
+    surfaceVariant = Slate100,
+    onSurfaceVariant = Slate500,
+    surfaceTint = Color.Transparent,
+    inverseSurface = Slate800,
+    inverseOnSurface = Slate100,
+    outline = Slate300,
+    outlineVariant = Slate200,
+    scrim = Color.Black,
+    surfaceBright = Color.White,
+    surfaceDim = Slate200,
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color.White,
+    surfaceContainer = Slate100,
+    surfaceContainerHigh = Slate100,
+    surfaceContainerHighest = Slate200,
 )
 
 val DarkColors = darkColorScheme(
-    primary = Color(0xFFB4C5FF),
-    onPrimary = Color(0xFF002A78),
-    primaryContainer = Color(0xFF1D4ED8),
-    onPrimaryContainer = Color(0xFFE6ECFF),
-    inversePrimary = Color(0xFF1D4ED8),
-    secondary = Color(0xFFBCC6E9),
-    onSecondary = Color(0xFF26304B),
-    secondaryContainer = Color(0xFF3C4663),
-    onSecondaryContainer = Color(0xFFDAE2FF),
-    tertiary = Color(0xFFF0BF48),
-    onTertiary = Color(0xFF402D00),
-    tertiaryContainer = Color(0xFF5C4300),
-    onTertiaryContainer = Color(0xFFFFDEA6),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6),
-    background = Color(0xFF111318),
-    onBackground = Color(0xFFE2E2E9),
-    surface = Color(0xFF111318),
-    onSurface = Color(0xFFE2E2E9),
-    surfaceVariant = Color(0xFF44464F),
-    onSurfaceVariant = Color(0xFFC5C6D0),
-    surfaceTint = Color(0xFFB4C5FF),
-    inverseSurface = Color(0xFFE2E2E9),
-    inverseOnSurface = Color(0xFF2F3036),
-    outline = Color(0xFF8F9099),
-    outlineVariant = Color(0xFF44464F),
-    scrim = Color(0xFF000000),
-    surfaceBright = Color(0xFF37393E),
-    surfaceDim = Color(0xFF111318),
-    surfaceContainerLowest = Color(0xFF0C0E13),
-    surfaceContainerLow = Color(0xFF1A1B21),
-    surfaceContainer = Color(0xFF1E1F25),
-    surfaceContainerHigh = Color(0xFF282A2F),
-    surfaceContainerHighest = Color(0xFF33353A),
+    primary = BrandBlue,
+    onPrimary = Color.White,
+    primaryContainer = BrandBlueDark,
+    onPrimaryContainer = Color(0xFFDBEAFE),
+    inversePrimary = BrandBlueDark,
+    secondary = Slate400,
+    onSecondary = Slate900,
+    secondaryContainer = Slate700,
+    onSecondaryContainer = Slate100,
+    tertiary = Amber,
+    onTertiary = OnAmber,
+    tertiaryContainer = Color(0xFF78350F),
+    onTertiaryContainer = Color(0xFFFEF3C7),
+    error = Color(0xFFF87171),
+    onError = Slate900,
+    errorContainer = Color(0xFF7F1D1D),
+    onErrorContainer = Color(0xFFFEE2E2),
+    background = Slate900,
+    onBackground = Slate100,
+    surface = Slate800,
+    onSurface = Slate100,
+    surfaceVariant = Slate700,
+    onSurfaceVariant = Slate400,
+    surfaceTint = Color.Transparent,
+    inverseSurface = Slate100,
+    inverseOnSurface = Slate800,
+    outline = Slate600,
+    outlineVariant = Slate700,
+    scrim = Color.Black,
+    surfaceBright = Slate700,
+    surfaceDim = Slate900,
+    surfaceContainerLowest = Slate900,
+    surfaceContainerLow = Slate800,
+    surfaceContainer = Slate800,
+    surfaceContainerHigh = Slate700,
+    surfaceContainerHighest = Slate700,
 )

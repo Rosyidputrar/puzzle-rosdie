@@ -1,6 +1,9 @@
 package id.rosdie.puzzle.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,10 +37,20 @@ fun PuzzleNavHost(
     NavHost(
         navController = nav,
         startDestination = if (showSplash) SplashRoute else HomeRoute,
-        enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) + fadeIn(tween(280)) },
-        exitTransition = { fadeOut(tween(200)) },
-        popEnterTransition = { fadeIn(tween(220)) },
-        popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(260)) + fadeOut(tween(260)) },
+        // Transisi ala iOS: layar baru meluncur dari kanan, layar lama bergeser sedikit (parallax)
+        // dan meredup; kembali = kebalikannya. Spring membuatnya terasa luwes.
+        enterTransition = {
+            slideInHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeIn(tween(220))
+        },
+        exitTransition = {
+            slideOutHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeOut(tween(260))
+        },
+        popEnterTransition = {
+            slideInHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { -it / 4 } + fadeIn(tween(260))
+        },
+        popExitTransition = {
+            slideOutHorizontally(spring(dampingRatio = 0.9f, stiffness = Spring.StiffnessMediumLow)) { it } + fadeOut(tween(220))
+        },
     ) {
         composable<SplashRoute>(enterTransition = { fadeIn() }, exitTransition = { fadeOut(tween(250)) }) {
             SplashScreen(onFinished = {

@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.settings
 
+import id.rosdie.puzzle.ui.components.SecondaryButton
+import id.rosdie.puzzle.ui.components.ConfirmDialog
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.appcompat.app.AppCompatDelegate
@@ -16,10 +18,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import id.rosdie.puzzle.ui.components.AppSlider
-import id.rosdie.puzzle.ui.components.PillSelector
+import id.rosdie.puzzle.ui.components.SegmentedSelector
 import id.rosdie.puzzle.ui.components.SectionCard
-import id.rosdie.puzzle.ui.components.Tone
-import id.rosdie.puzzle.ui.components.accentBrush
 import id.rosdie.puzzle.ui.splash.LogoMark
 import id.rosdie.puzzle.ui.theme.DarkColors
 import id.rosdie.puzzle.ui.theme.LightColors
@@ -38,20 +38,15 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
@@ -103,6 +98,8 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        containerColor = Color.Transparent,
+        
         topBar = { BackTopBar(stringResource(R.string.nav_settings), onBack) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
@@ -117,9 +114,9 @@ fun SettingsScreen(
         ) {
             val m = Modifier.widthIn(max = 640.dp).fillMaxWidth()
 
-            SectionCard(stringResource(R.string.settings_game), m, icon = AppIcons.Grid, tone = Tone.PRIMARY) {
+            SectionCard(stringResource(R.string.settings_game), m, icon = AppIcons.Grid) {
                 Label(stringResource(R.string.settings_difficulty))
-                PillSelector(
+                SegmentedSelector(
                     options = Difficulty.entries.toList(),
                     selected = s.difficulty,
                     onSelect = { d -> viewModel.update { it.copy(difficulty = d) } },
@@ -132,7 +129,7 @@ fun SettingsScreen(
                     viewModel.update { it.copy(showReference = v) }
                 }
                 Label(stringResource(R.string.settings_animation))
-                PillSelector(
+                SegmentedSelector(
                     options = AnimationSpeed.entries.toList(),
                     selected = s.animationSpeed,
                     onSelect = { a -> viewModel.update { it.copy(animationSpeed = a) } },
@@ -154,7 +151,7 @@ fun SettingsScreen(
                 )
             }
 
-            SectionCard(stringResource(R.string.settings_appearance), m, icon = AppIcons.Palette, tone = Tone.TERTIARY) {
+            SectionCard(stringResource(R.string.settings_appearance), m, icon = AppIcons.Palette) {
                 Label(stringResource(R.string.settings_theme))
                 ThemePicker(s.themeMode) { t -> viewModel.update { it.copy(themeMode = t) } }
                 SwitchRow(
@@ -168,7 +165,7 @@ fun SettingsScreen(
                 LanguagePicker()
             }
 
-            SectionCard(stringResource(R.string.settings_sound_haptics), m, icon = AppIcons.Volume, tone = Tone.SECONDARY) {
+            SectionCard(stringResource(R.string.settings_sound_haptics), m, icon = AppIcons.Volume) {
                 SwitchRow(AppIcons.Volume, stringResource(R.string.settings_sound), null, s.soundEnabled) { v ->
                     viewModel.update { it.copy(soundEnabled = v) }
                 }
@@ -178,7 +175,7 @@ fun SettingsScreen(
                         container.sound?.click()
                     }
                     Label(stringResource(R.string.settings_click_sound))
-                    PillSelector(
+                    SegmentedSelector(
                         options = ClickSound.entries.toList(),
                         selected = s.clickSound,
                         onSelect = { c ->
@@ -213,26 +210,27 @@ fun SettingsScreen(
                 ) { v -> viewModel.update { it.copy(winCelebration = v) } }
             }
 
-            SectionCard(stringResource(R.string.settings_data), m, icon = AppIcons.Lock, tone = Tone.ERROR) {
+            SectionCard(stringResource(R.string.settings_data), m, icon = AppIcons.Lock) {
                 Text(stringResource(R.string.settings_data_desc), style = MaterialTheme.typography.bodyMedium)
                 Spacer(Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = { deleteStep = 1 },
-                    enabled = !clearing,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                ) {
-                    if (clearing) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Icon(AppIcons.Delete, null, Modifier.size(18.dp))
-                    Spacer(Modifier.size(8.dp))
-                    Text(stringResource(R.string.settings_delete_all))
+                if (clearing) {
+                    CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                } else {
+                    SecondaryButton(
+                        stringResource(R.string.settings_delete_all),
+                        { deleteStep = 1 },
+                        icon = AppIcons.Delete,
+                        contentColor = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
 
-            SectionCard(stringResource(R.string.settings_about), m, icon = AppIcons.Info, tone = Tone.NEUTRAL) {
+            SectionCard(stringResource(R.string.settings_about), m, icon = AppIcons.Info) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     LogoMark(
                         Modifier
                             .size(56.dp)
-                            .background(accentBrush(), RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                             .padding(10.dp),
                     )
                     Spacer(Modifier.size(14.dp))
@@ -252,48 +250,46 @@ fun SettingsScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(stringResource(R.string.settings_privacy), style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = { showLicenses = true }) { Text(stringResource(R.string.settings_licenses)) }
+                Spacer(Modifier.height(10.dp))
+                SecondaryButton(stringResource(R.string.settings_licenses), { showLicenses = true }, icon = AppIcons.Info)
             }
         }
     }
 
     if (deleteStep == 1) {
-        AlertDialog(
-            onDismissRequest = { deleteStep = 0 },
-            icon = { Icon(AppIcons.Delete, null) },
-            title = { Text(stringResource(R.string.delete_step1_title)) },
-            text = { Text(stringResource(R.string.delete_step1_body)) },
-            confirmButton = { TextButton(onClick = { deleteStep = 2 }) { Text(stringResource(R.string.action_continue)) } },
-            dismissButton = { TextButton(onClick = { deleteStep = 0 }) { Text(stringResource(R.string.action_cancel)) } },
+        ConfirmDialog(
+            title = stringResource(R.string.delete_step1_title),
+            text = stringResource(R.string.delete_step1_body),
+            confirmText = stringResource(R.string.action_continue),
+            onConfirm = { deleteStep = 2 },
+            onDismiss = { deleteStep = 0 },
+            icon = AppIcons.Delete,
+            dismissText = stringResource(R.string.action_cancel),
         )
     }
     if (deleteStep == 2) {
-        AlertDialog(
-            onDismissRequest = { deleteStep = 0 },
-            title = { Text(stringResource(R.string.delete_step2_title)) },
-            text = { Text(stringResource(R.string.delete_step2_body)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        deleteStep = 0
-                        viewModel.clearAllData()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.onError),
-                ) { Text(stringResource(R.string.delete_step2_confirm)) }
+        ConfirmDialog(
+            title = stringResource(R.string.delete_step2_title),
+            text = stringResource(R.string.delete_step2_body),
+            confirmText = stringResource(R.string.delete_step2_confirm),
+            onConfirm = {
+                deleteStep = 0
+                viewModel.clearAllData()
             },
-            dismissButton = { TextButton(onClick = { deleteStep = 0 }) { Text(stringResource(R.string.action_cancel)) } },
+            onDismiss = { deleteStep = 0 },
+            icon = AppIcons.Lock,
+            dismissText = stringResource(R.string.action_cancel),
+            destructive = true,
         )
     }
     if (showLicenses) {
-        AlertDialog(
-            onDismissRequest = { showLicenses = false },
-            title = { Text(stringResource(R.string.settings_licenses)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(stringResource(R.string.licenses_body), style = MaterialTheme.typography.bodySmall)
-                }
-            },
-            confirmButton = { TextButton(onClick = { showLicenses = false }) { Text(stringResource(R.string.action_close)) } },
+        ConfirmDialog(
+            title = stringResource(R.string.settings_licenses),
+            text = stringResource(R.string.licenses_body),
+            confirmText = stringResource(R.string.action_close),
+            onConfirm = { showLicenses = false },
+            onDismiss = { showLicenses = false },
+            icon = AppIcons.Info,
         )
     }
 }
@@ -302,7 +298,7 @@ fun SettingsScreen(
 private fun LanguagePicker() {
     var current by remember { mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore('-')) }
     val options = listOf("", "id", "en")
-    PillSelector(
+    SegmentedSelector(
         options = options,
         selected = if (current in options) current else "",
         onSelect = { tag ->

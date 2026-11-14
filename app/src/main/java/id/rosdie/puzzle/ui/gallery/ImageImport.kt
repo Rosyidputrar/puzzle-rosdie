@@ -1,5 +1,7 @@
 package id.rosdie.puzzle.ui.gallery
 
+import id.rosdie.puzzle.ui.components.AppIcons
+import id.rosdie.puzzle.ui.components.ConfirmDialog
 import android.content.ActivityNotFoundException
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -18,13 +20,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -158,19 +158,23 @@ private fun ImportHost(state: ImportState, onCrop: (Bitmap, Rect) -> Unit) {
         Dialog(onDismissRequest = {}) { CircularProgressIndicator() }
     }
     state.error?.let { err ->
-        AlertDialog(
-            onDismissRequest = { state.error = null },
-            confirmButton = { TextButton(onClick = { state.error = null }) { Text(stringResource(R.string.action_ok)) } },
-            title = { Text(stringResource(R.string.image_error_title)) },
-            text = { Text(stringResource(imageErrorMessage(err))) },
+        ConfirmDialog(
+            title = stringResource(R.string.image_error_title),
+            text = stringResource(imageErrorMessage(err)),
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = { state.error = null },
+            onDismiss = { state.error = null },
+            icon = AppIcons.Image,
         )
     }
     if (state.cameraUnavailable) {
-        AlertDialog(
-            onDismissRequest = { state.cameraUnavailable = false },
-            confirmButton = { TextButton(onClick = { state.cameraUnavailable = false }) { Text(stringResource(R.string.action_ok)) } },
-            title = { Text(stringResource(R.string.image_error_title)) },
-            text = { Text(stringResource(R.string.image_error_no_camera)) },
+        ConfirmDialog(
+            title = stringResource(R.string.image_error_title),
+            text = stringResource(R.string.image_error_no_camera),
+            confirmText = stringResource(R.string.action_ok),
+            onConfirm = { state.cameraUnavailable = false },
+            onDismiss = { state.cameraUnavailable = false },
+            icon = AppIcons.Camera,
         )
     }
 }

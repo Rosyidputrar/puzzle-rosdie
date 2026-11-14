@@ -4,14 +4,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -44,7 +40,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
@@ -71,6 +66,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.zIndex
 import id.rosdie.puzzle.R
+import id.rosdie.puzzle.ui.theme.NumberFont
+import id.rosdie.puzzle.ui.theme.LocalDarkTheme
+import id.rosdie.puzzle.ui.theme.CardShape
+import id.rosdie.puzzle.ui.theme.BrandBlueDark
+import id.rosdie.puzzle.ui.theme.BrandBlue
 import id.rosdie.puzzle.domain.engine.PuzzleEngine
 import id.rosdie.puzzle.domain.model.Direction
 import id.rosdie.puzzle.domain.model.PuzzleState
@@ -106,13 +106,13 @@ fun PuzzleBoard(
     val n = board.size
     val reduceMotion = rememberReducedMotion()
     val colors = MaterialTheme.colorScheme
-    val outerShape = RoundedCornerShape(if (n >= 5) 18.dp else 22.dp)
+    val outerShape = CardShape
     val boardDescription = stringResource(R.string.a11y_board, n, n)
     Box(
         modifier
             .aspectRatio(1f)
             .clip(outerShape)
-            .background(colors.surfaceContainerHighest)
+            .background(colors.surfaceContainerHigh)
             .padding(6.dp)
             .semantics { contentDescription = boardDescription },
     ) {
@@ -122,7 +122,8 @@ fun PuzzleBoard(
             val gapPx = with(density) { (if (n >= 5) 5.dp else 6.dp).toPx() }
             val tilePx = cellPx - gapPx
             val tileDp = with(density) { tilePx.toDp() }
-            val corner = with(density) { (tilePx * 0.16f).toDp() }
+            // Radius tile tetap 12 dp (sedikit lebih kecil di 5x5 dan pratinjau mini).
+            val corner = minOf(12.dp, with(density) { (tilePx * 0.16f).toDp() })
             val tileShape = RoundedCornerShape(corner)
             // Ukuran angka proporsional dengan tile (juga di pratinjau kecil); toSp menetralkan
             // skala font sistem agar angka tidak meluber dari tile.
@@ -165,7 +166,7 @@ fun PuzzleBoard(
                 }
             }
 
-            val slot = colors.outline
+            val slot = colors.onSurface
             Box(
                 Modifier
                     .fillMaxSize()
@@ -288,6 +289,7 @@ fun PuzzleBoard(
                         )
                         val canMove = PuzzleEngine.lineMoves(board, index).isNotEmpty()
                         val desc = stringResource(R.string.a11y_tile, v, index / n + 1, index % n + 1)
+                        val glow = colors.primary
                         val correct = index == v - 1
                         val correctLabel = stringResource(R.string.a11y_tile_correct)
                         val moveLabel = stringResource(R.string.a11y_move_tile)
@@ -303,7 +305,11 @@ fun PuzzleBoard(
                                     val s = 1f + 0.045f * lift
                                     scaleX = s
                                     scaleY = s
-                                    shadowElevation = (2f + 10f * lift).dp.toPx()
+                                    // Hanya tile yang sedang bergerak terangkat dan berpendar biru;
+                                    // tile diam datar.
+                                    shadowElevation = (12f * lift).dp.toPx()
+                                    ambientShadowColor = glow
+                                    spotShadowColor = glow
                                     shape = tileShape
                                     clip = true
                                     translationX = if (shakeTile == v) shake.value.dp.toPx() else 0f
@@ -345,11 +351,11 @@ private suspend fun animateBack(
 
 @Composable
 private fun NumberTile(value: Int, fontSize: TextUnit, correct: Boolean, tileSize: Dp) {
-    val c = MaterialTheme.colorScheme
+    val base = if (LocalDarkTheme.current) BrandBlueDark else BrandBlue
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(lerpColor(c.primary, Color.White, 0.16f), c.primary))),
+            .background(base),
         contentAlignment = Alignment.Center,
     ) {
         // Penanda halus "sudah di tempatnya": titik di pojok kanan atas.
@@ -361,13 +367,14 @@ private fun NumberTile(value: Int, fontSize: TextUnit, correct: Boolean, tileSiz
                     .padding(tileSize * 0.09f)
                     .size(tileSize * 0.09f)
                     .graphicsLayer { scaleX = dot; scaleY = dot; alpha = dot }
-                    .background(c.onPrimary.copy(alpha = 0.85f), RoundedCornerShape(50)),
+                    .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50)),
             )
         }
         Text(
             text = value.toString(),
-            color = c.onPrimary,
-            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            fontFamily = NumberFont,
+            fontWeight = FontWeight.SemiBold,
             fontSize = fontSize,
         )
     }
@@ -403,29 +410,18 @@ private fun ImageTile(image: ImageBitmap, value: Int, n: Int, showNumber: Boolea
     }
 }
 
+/** Sorotan hint: bingkai tebal statis (tanpa animasi berdenyut). */
 @Composable
 private fun HintGlow(shape: RoundedCornerShape) {
-    val pulse by rememberInfiniteTransition(label = "hint").animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(650), RepeatMode.Reverse),
-        label = "pulse",
-    )
-    val color = MaterialTheme.colorScheme.tertiary
+    val c = MaterialTheme.colorScheme
     Box(
         Modifier
             .fillMaxSize()
-            .background(color.copy(alpha = 0.18f * pulse), shape)
-            .border(4.dp, color.copy(alpha = pulse), shape),
+            .border(4.dp, c.onSurface, shape)
+            .padding(4.dp)
+            .border(2.dp, Color.White, shape),
     )
 }
-
-private fun lerpColor(a: Color, b: Color, t: Float) = Color(
-    red = a.red + (b.red - a.red) * t,
-    green = a.green + (b.green - a.green) * t,
-    blue = a.blue + (b.blue - a.blue) * t,
-    alpha = 1f,
-)
 
 private fun dominant(d: Offset): Direction =
     if (abs(d.x) > abs(d.y)) (if (d.x > 0) Direction.RIGHT else Direction.LEFT)
