@@ -231,7 +231,7 @@
     <string name="reference_title">Acuan</string>
     <string name="settings_about">Tentang</string>
     <string name="settings_animation">Kecepatan animasi</string>
-    <string name="settings_animation_note">Bila animasi sistem dimatikan, gerakan dibuat seminimal mungkin.</string>
+    <string name="settings_animation_note">Mengatur kecepatan gerakan tile dan transisi layar. Bila animasi sistem dimatikan, gerakan dibuat seminimal mungkin.</string>
     <string name="settings_appearance">Tampilan</string>
     <string name="settings_author">Pembuat</string>
     <string name="settings_author_value">Rosdie</string>

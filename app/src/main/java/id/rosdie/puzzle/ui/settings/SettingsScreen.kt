@@ -39,23 +39,26 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -73,10 +76,13 @@ import id.rosdie.puzzle.data.datastore.ThemeMode
 import id.rosdie.puzzle.domain.model.Difficulty
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.BackTopBar
+import id.rosdie.puzzle.ui.components.Label
 import id.rosdie.puzzle.ui.home.difficultyLabel
+import id.rosdie.puzzle.ui.theme.accentTextColor
 import id.rosdie.puzzle.ui.theme.supportsDynamicColor
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     container: AppContainer,
@@ -86,9 +92,10 @@ fun SettingsScreen(
     val s by viewModel.settings.collectAsStateWithLifecycle()
     val clearing by viewModel.clearing.collectAsStateWithLifecycle()
     val cleared by viewModel.cleared.collectAsStateWithLifecycle()
-    var deleteStep by remember { mutableIntStateOf(0) }
-    var showLicenses by remember { mutableStateOf(false) }
+    var deleteStep by rememberSaveable { mutableIntStateOf(0) }
+    var showLicenses by rememberSaveable { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
+    val sb = TopAppBarDefaults.pinnedScrollBehavior()
     val clearedText = stringResource(R.string.settings_data_cleared)
     LaunchedEffect(cleared) {
         if (cleared) {
@@ -99,8 +106,8 @@ fun SettingsScreen(
 
     Scaffold(
         containerColor = Color.Transparent,
-        
-        topBar = { BackTopBar(stringResource(R.string.nav_settings), onBack) },
+        modifier = Modifier.nestedScroll(sb.nestedScrollConnection),
+        topBar = { BackTopBar(stringResource(R.string.nav_settings), onBack, scrollBehavior = sb) },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(
@@ -122,7 +129,6 @@ fun SettingsScreen(
                     onSelect = { d -> viewModel.update { it.copy(difficulty = d) } },
                     label = { difficultyLabel(it.size) },
                     sublabel = { stringResource(R.string.grid_label, it.size, it.size) },
-                    height = 52.dp,
                 )
                 Spacer(Modifier.height(8.dp))
                 SwitchRow(AppIcons.Visibility, stringResource(R.string.settings_reference), stringResource(R.string.settings_reference_desc), s.showReference) { v ->
@@ -359,7 +365,7 @@ private fun ThemePicker(selected: ThemeMode, onSelect: (ThemeMode) -> Unit) {
                     }
                 }
                 Spacer(Modifier.height(6.dp))
-                Text(label, style = MaterialTheme.typography.labelLarge, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                Text(label, style = MaterialTheme.typography.labelLarge, color = if (isSelected) accentTextColor() else MaterialTheme.colorScheme.onSurface)
             }
         }
     }
@@ -379,11 +385,6 @@ private fun MiniScreen(background: Color, accent: Color, card: Color, modifier: 
             drawRoundRect(accent, Offset(x + cell * 0.08f, y + cell * 0.08f), Size(cell * 0.84f, cell * 0.84f), CornerRadius(cell * 0.2f))
         }
     }
-}
-
-@Composable
-private fun Label(text: String) {
-    Text(text, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 8.dp, bottom = 6.dp))
 }
 
 @Composable
@@ -409,21 +410,6 @@ private fun SwitchRow(
             if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(checked = checked, onCheckedChange = null, enabled = enabled)
-    }
-}
-
-@Composable
-private fun RadioRow(text: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        RadioButton(selected = selected, onClick = null)
-        Spacer(Modifier.size(12.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }
 

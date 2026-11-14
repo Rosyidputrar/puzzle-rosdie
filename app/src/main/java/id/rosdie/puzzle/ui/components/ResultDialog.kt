@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import id.rosdie.puzzle.ui.theme.ConfettiBlue
+import id.rosdie.puzzle.ui.theme.Success
 import id.rosdie.puzzle.ui.theme.TabularNumbers
 
 /**
@@ -84,7 +86,7 @@ fun ResultDialog(
                 }
             }
             if (celebrate && !reduceMotion) {
-                Confetti(Modifier.fillMaxSize(), colors = listOf(c.primary, c.tertiary, Color(0xFF16A34A), Color(0xFF93C5FD)))
+                Confetti(Modifier.fillMaxSize(), colors = listOf(c.primary, c.tertiary, Success, ConfettiBlue))
             }
         }
     }

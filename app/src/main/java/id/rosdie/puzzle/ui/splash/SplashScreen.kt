@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.dp
 import id.rosdie.puzzle.R
 import id.rosdie.puzzle.ui.components.rememberReducedMotion
 import id.rosdie.puzzle.ui.theme.BrandBlue
+import id.rosdie.puzzle.ui.theme.BrandBlueDark
+import id.rosdie.puzzle.ui.theme.LocalDarkTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -45,13 +47,8 @@ private val SCATTER = listOf(
  * acak menuju posisi benar.
  */
 @Composable
-fun LogoMark(modifier: Modifier = Modifier, animate: Boolean = false, progress: Float? = null) {
-    val reduceMotion = rememberReducedMotion()
-    val anim = remember { Animatable(if (animate && !reduceMotion && progress == null) 0f else 1f) }
-    if (animate && progress == null) {
-        LaunchedEffect(Unit) { anim.animateTo(1f, tween(900, easing = FastOutSlowInEasing)) }
-    }
-    val p = progress ?: anim.value
+fun LogoMark(modifier: Modifier = Modifier, progress: Float? = null) {
+    val p = progress ?: 1f
     val desc = stringResource(R.string.a11y_logo)
     Canvas(modifier.semantics { contentDescription = desc }) {
         val cell = size.minDimension / 3f
@@ -102,7 +99,7 @@ fun SplashScreen(onFinished: () -> Unit) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(BrandBlue),
+            .background(if (LocalDarkTheme.current) BrandBlueDark else BrandBlue),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {

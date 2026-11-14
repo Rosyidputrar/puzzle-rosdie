@@ -1,7 +1,13 @@
 package id.rosdie.puzzle.ui.home
 
-import id.rosdie.puzzle.ui.theme.Success
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import id.rosdie.puzzle.ui.components.PrimaryButton
+import id.rosdie.puzzle.ui.components.rememberReducedMotion
+import id.rosdie.puzzle.ui.theme.accentTextColor
+import id.rosdie.puzzle.ui.theme.successTextColor
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -17,7 +23,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -31,6 +36,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -89,21 +95,26 @@ fun HomeScreen(
     var showSetup by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(containerColor = Color.Transparent) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            val content = Modifier.widthIn(max = 640.dp).fillMaxWidth()
-            Hero(state, content, onPlay = { showSetup = true })
-            state.saved?.let { ContinueCard(it, onResume, content) }
-            DailyCard(state.stats, onDaily, content)
-            NavList(state, content, onGallery, onStats, onHowTo, onSettings)
-            RecordsCard(state.stats, state.loading, content)
+        val reduceMotion = rememberReducedMotion()
+        var entered by remember { mutableStateOf(reduceMotion) }
+        LaunchedEffect(Unit) { entered = true }
+        AnimatedVisibility(visible = entered, enter = fadeIn(tween(300)), exit = ExitTransition.None) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                val content = Modifier.widthIn(max = 640.dp).fillMaxWidth()
+                Hero(state, content, onPlay = { showSetup = true })
+                state.saved?.let { ContinueCard(it, onResume, content) }
+                DailyCard(state.stats, onDaily, content)
+                NavList(state, content, onGallery, onStats, onHowTo, onSettings)
+                RecordsCard(state.stats, state.loading, content)
+            }
         }
     }
 
@@ -120,9 +131,22 @@ fun HomeScreen(
     }
 }
 
+/** Jam saat ini, diperbarui tiap menit agar sapaan mengikuti waktu. */
+@Composable
+private fun rememberHour(): Int {
+    var hour by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        }
+    }
+    return hour
+}
+
 @Composable
 private fun greeting(): String {
-    val hour = remember { Calendar.getInstance().get(Calendar.HOUR_OF_DAY) }
+    val hour = rememberHour()
     return stringResource(
         when (hour) {
             in 4..10 -> R.string.greeting_morning
@@ -147,6 +171,7 @@ private fun Hero(state: HomeUiState, modifier: Modifier, onPlay: () -> Unit) {
                 Text(
                     stringResource(R.string.app_name),
                     style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.semantics { heading() },
                 )
             }
@@ -154,7 +179,7 @@ private fun Hero(state: HomeUiState, modifier: Modifier, onPlay: () -> Unit) {
         Spacer(Modifier.height(6.dp))
         Text(stringResource(R.string.home_tagline), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(16.dp))
-        PrimaryButton(stringResource(R.string.action_play), AppIcons.Play, onPlay, Modifier.fillMaxWidth().heightIn(min = 56.dp))
+        PrimaryButton(stringResource(R.string.action_play), AppIcons.Play, onPlay, Modifier.fillMaxWidth())
     }
 }
 
@@ -228,7 +253,7 @@ private fun DailyCard(stats: StatsSummary?, onClick: () -> Unit, modifier: Modif
                     Text(
                         stringResource(if (done) R.string.status_done else R.string.status_open),
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (done) Success else c.onSurfaceVariant,
+                        color = if (done) successTextColor() else c.onSurfaceVariant,
                     )
                 }
                 Text(
@@ -245,7 +270,7 @@ private fun DailyCard(stats: StatsSummary?, onClick: () -> Unit, modifier: Modif
             val streak = stats?.currentStreak ?: 0
             if (streak > 0) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(AppIcons.Fire, null, tint = c.primary)
+                    Icon(AppIcons.Fire, null, tint = accentTextColor())
                     Text(stringResource(R.string.streak_days_short, streak), style = MaterialTheme.typography.titleMedium.merge(TabularNumbers))
                 }
             }

@@ -25,9 +25,11 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import id.rosdie.puzzle.ui.components.PrimaryButton
@@ -42,11 +44,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -75,6 +79,7 @@ private sealed interface Selected {
     data class Custom(val image: CustomImage) : Selected
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalleryScreen(
     container: AppContainer,
@@ -83,18 +88,31 @@ fun GalleryScreen(
     viewModel: GalleryViewModel = viewModel(factory = GalleryViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    var selected by remember { mutableStateOf<Selected?>(null) }
-    var confirmDelete by remember { mutableStateOf<CustomImage?>(null) }
-    val importer = rememberImageImport(container) { selected = Selected.Custom(it) }
+    var selectedKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val selected: Selected? = remember(selectedKey, state.images) {
+        val key = selectedKey ?: return@remember null
+        when {
+            key.startsWith("b:") -> BuiltInImage.entries.firstOrNull { it.imageId == key.removePrefix("b:") }?.let { Selected.BuiltIn(it) }
+            key.startsWith("c:") -> state.images.firstOrNull { it.id == key.removePrefix("c:") }?.let { Selected.Custom(it) }
+            else -> null
+        }
+    }
+    var confirmDeleteId by rememberSaveable { mutableStateOf<String?>(null) }
+    val confirmDelete: CustomImage? = remember(confirmDeleteId, state.images) {
+        state.images.firstOrNull { it.id == confirmDeleteId }
+    }
+    val importer = rememberImageImport(container) { selectedKey = "c:${it.id}" }
+    val sb = TopAppBarDefaults.pinnedScrollBehavior()
 
     fun use(imageId: String) {
-        selected = null
+        selectedKey = null
         onUseImage(GameConfig(state.difficultySize, GameMode.IMAGE, imageId, ChallengeType.NORMAL, null))
     }
 
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(stringResource(R.string.nav_gallery), onBack) }) { padding ->
+        modifier = Modifier.nestedScroll(sb.nestedScrollConnection),
+        topBar = { BackTopBar(stringResource(R.string.nav_gallery), onBack, scrollBehavior = sb) }) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 104.dp),
             modifier = Modifier
@@ -108,8 +126,8 @@ fun GalleryScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     StorageCard(state)
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SecondaryButton(stringResource(R.string.gallery_add_gallery), importer.pickFromGallery, Modifier.weight(1f).heightIn(min = 56.dp), icon = AppIcons.AddPhoto)
-                        SecondaryButton(stringResource(R.string.gallery_add_camera), importer.takePhoto, Modifier.weight(1f).heightIn(min = 56.dp), icon = AppIcons.Camera)
+                        SecondaryButton(stringResource(R.string.gallery_add_gallery), importer.pickFromGallery, Modifier.weight(1f), icon = AppIcons.AddPhoto)
+                        SecondaryButton(stringResource(R.string.gallery_add_camera), importer.takePhoto, Modifier.weight(1f), icon = AppIcons.Camera)
                     }
                     Text(
                         stringResource(R.string.gallery_formats),
@@ -133,7 +151,7 @@ fun GalleryScreen(
             }
             items(state.images, key = { it.id }) { img ->
                 val label = stringResource(R.string.image_custom)
-                GridThumb(label, tag = null, onClick = { selected = Selected.Custom(img) }) {
+                GridThumb(label, onClick = { selectedKey = "c:${img.id}" }) {
                     CustomThumb(img, label, Modifier.fillMaxSize())
                 }
             }
@@ -142,7 +160,7 @@ fun GalleryScreen(
             }
             items(BuiltInImage.entries, key = { it.key }) { img ->
                 val title = stringResource(img.titleRes)
-                GridThumb(title, tag = null, onClick = { selected = Selected.BuiltIn(img) }) {
+                GridThumb(title, onClick = { selectedKey = "b:${img.imageId}" }) {
                     BuiltInThumb(img, container.images, title, Modifier.fillMaxSize())
                 }
             }
@@ -153,14 +171,14 @@ fun GalleryScreen(
         PreviewDialog(
             selected = sel,
             repo = container.images,
-            onDismiss = { selected = null },
+            onDismiss = { selectedKey = null },
             onUse = {
                 when (sel) {
                     is Selected.BuiltIn -> use(sel.image.imageId)
                     is Selected.Custom -> use(ImageIds.custom(sel.image.id))
                 }
             },
-            onDelete = (sel as? Selected.Custom)?.let { { confirmDelete = sel.image } },
+            onDelete = (sel as? Selected.Custom)?.let { { confirmDeleteId = sel.image.id } },
         )
     }
 
@@ -171,10 +189,10 @@ fun GalleryScreen(
             confirmText = stringResource(R.string.action_delete),
             onConfirm = {
                 viewModel.delete(img.id)
-                confirmDelete = null
-                selected = null
+                confirmDeleteId = null
+                selectedKey = null
             },
-            onDismiss = { confirmDelete = null },
+            onDismiss = { confirmDeleteId = null },
             icon = AppIcons.Delete,
             dismissText = stringResource(R.string.action_cancel),
             destructive = true,
@@ -208,7 +226,7 @@ private fun StorageCard(state: GalleryUiState) {
 }
 
 @Composable
-private fun GridThumb(label: String, tag: String?, onClick: () -> Unit, content: @Composable () -> Unit) {
+private fun GridThumb(label: String, onClick: () -> Unit, content: @Composable () -> Unit) {
     Box(
         Modifier
             .aspectRatio(1f)
@@ -225,15 +243,6 @@ private fun GridThumb(label: String, tag: String?, onClick: () -> Unit, content:
                 .padding(start = 10.dp, end = 10.dp, top = 18.dp, bottom = 8.dp),
         ) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, maxLines = 1)
-        }
-        if (tag != null) {
-            Surface(
-                shape = CircleShape,
-                color = Color.Black.copy(alpha = 0.45f),
-                modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
-            ) {
-                Text(tag, style = MaterialTheme.typography.labelSmall, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
-            }
         }
     }
 }
@@ -257,7 +266,7 @@ private fun PreviewDialog(
     }
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface, shadowElevation = 8.dp) {
-            Column(Modifier.padding(16.dp).widthIn(max = 480.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp).widthIn(max = 480.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title, style = MaterialTheme.typography.titleLarge)
                 Spacer(Modifier.height(12.dp))
                 Box(

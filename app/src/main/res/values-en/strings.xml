@@ -230,7 +230,7 @@
     <string name="reference_title">Reference</string>
     <string name="settings_about">About</string>
     <string name="settings_animation">Animation speed</string>
-    <string name="settings_animation_note">When system animations are off, motion is kept to a minimum.</string>
+    <string name="settings_animation_note">Sets the speed of tile movement and screen transitions. When system animations are off, motion is kept to a minimum.</string>
     <string name="settings_appearance">Appearance</string>
     <string name="settings_author">Made by</string>
     <string name="settings_author_value">Rosdie</string>

@@ -1,7 +1,6 @@
 package id.rosdie.puzzle.ui.game
 
 import id.rosdie.puzzle.ui.components.Tag
-import id.rosdie.puzzle.ui.components.Tag
 import id.rosdie.puzzle.ui.components.SecondaryButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

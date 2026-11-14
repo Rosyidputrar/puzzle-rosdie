@@ -2,6 +2,8 @@ package id.rosdie.puzzle.ui.gallery
 
 import id.rosdie.puzzle.ui.components.AppIcons
 import id.rosdie.puzzle.ui.components.ConfirmDialog
+import id.rosdie.puzzle.ui.components.PrimaryButton
+import id.rosdie.puzzle.ui.components.SecondaryButton
 import android.content.ActivityNotFoundException
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -20,12 +22,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -195,8 +196,9 @@ fun CropDialog(bitmap: Bitmap, busy: Boolean, onCancel: () -> Unit, onConfirm: (
     val image = remember(bitmap) { bitmap.asImageBitmap() }
     var userScale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
-    // Geometri dihitung di composition (bukan di fase draw) dan dipakai saat konfirmasi.
-    val geometry = remember(bitmap) { CropGeometry() }
+    // Geometri bingkai ditulis ke state lewat SideEffect (bukan dimutasi saat composition).
+    var frameState by remember { mutableFloatStateOf(0f) }
+    var baseState by remember { mutableFloatStateOf(1f) }
     Dialog(onDismissRequest = onCancel, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         Column(
             Modifier
@@ -227,8 +229,10 @@ fun CropDialog(bitmap: Bitmap, busy: Boolean, onCancel: () -> Unit, onConfirm: (
                 val h = with(density) { maxHeight.toPx() }
                 val frame = min(w, h) * 0.92f
                 val base = frame / min(bitmap.width, bitmap.height)
-                geometry.frame = frame
-                geometry.base = base
+                SideEffect {
+                    frameState = frame
+                    baseState = base
+                }
                 val cropDesc = stringResource(R.string.crop_a11y)
                 fun clamp(o: Offset, scale: Float): Offset {
                     val ds = base * scale
@@ -256,7 +260,7 @@ fun CropDialog(bitmap: Bitmap, busy: Boolean, onCancel: () -> Unit, onConfirm: (
                         image,
                         dstOffset = IntOffset(topLeft.x.roundToInt(), topLeft.y.roundToInt()),
                         dstSize = IntSize(imgW.roundToInt(), imgH.roundToInt()),
-                        filterQuality = FilterQuality.Low,
+                        filterQuality = FilterQuality.Medium,
                     )
                     val fr = ComposeRect(center - Offset(frame / 2, frame / 2), Size(frame, frame))
                     val dim = Path().apply {
@@ -276,14 +280,14 @@ fun CropDialog(bitmap: Bitmap, busy: Boolean, onCancel: () -> Unit, onConfirm: (
                 if (busy) CircularProgressIndicator()
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onCancel, enabled = !busy, modifier = Modifier.weight(1f)) {
-                    Text(stringResource(R.string.action_cancel), color = Color.White)
-                }
-                Button(
-                    onClick = { onConfirm(geometry.cropRect(bitmap.width, bitmap.height, userScale, offset)) },
-                    enabled = !busy && geometry.frame > 0f,
-                    modifier = Modifier.weight(1f),
-                ) { Text(stringResource(R.string.crop_confirm)) }
+                SecondaryButton(stringResource(R.string.action_cancel), onCancel, Modifier.weight(1f), enabled = !busy, contentColor = Color.White)
+                PrimaryButton(
+                    stringResource(R.string.crop_confirm),
+                    null,
+                    { onConfirm(cropRect(frameState, baseState, bitmap.width, bitmap.height, userScale, offset)) },
+                    Modifier.weight(1f),
+                    enabled = !busy && frameState > 0f,
+                )
             }
             Text(
                 stringResource(R.string.crop_footer),
@@ -299,19 +303,14 @@ fun CropDialog(bitmap: Bitmap, busy: Boolean, onCancel: () -> Unit, onConfirm: (
 }
 
 
-/** Bingkai persegi di tengah area; gambar digeser [offset] dan diskalakan base*scale. */
-private class CropGeometry {
-    var frame = 0f
-    var base = 1f
-
-    fun cropRect(bw: Int, bh: Int, scale: Float, offset: Offset): Rect {
-        val ds = base * scale
-        // Posisi bingkai relatif terhadap pojok kiri atas gambar, dalam piksel tampilan.
-        val relLeft = (bw * ds - frame) / 2 - offset.x
-        val relTop = (bh * ds - frame) / 2 - offset.y
-        val left = (relLeft / ds).roundToInt().coerceIn(0, bw - 1)
-        val top = (relTop / ds).roundToInt().coerceIn(0, bh - 1)
-        val side = (frame / ds).roundToInt().coerceAtMost(min(bw - left, bh - top)).coerceAtLeast(1)
-        return Rect(left, top, left + side, top + side)
-    }
+/** Hitung rect crop persegi dari geometri bingkai: fungsi murni, tanpa state. */
+private fun cropRect(frame: Float, base: Float, bw: Int, bh: Int, scale: Float, offset: Offset): Rect {
+    val ds = base * scale
+    // Posisi bingkai relatif terhadap pojok kiri atas gambar, dalam piksel tampilan.
+    val relLeft = (bw * ds - frame) / 2 - offset.x
+    val relTop = (bh * ds - frame) / 2 - offset.y
+    val left = (relLeft / ds).roundToInt().coerceIn(0, bw - 1)
+    val top = (relTop / ds).roundToInt().coerceIn(0, bh - 1)
+    val side = (frame / ds).roundToInt().coerceAtMost(min(bw - left, bh - top)).coerceAtLeast(1)
+    return Rect(left, top, left + side, top + side)
 }

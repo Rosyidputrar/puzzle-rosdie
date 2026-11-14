@@ -1,6 +1,5 @@
 package id.rosdie.puzzle.ui.howto
 
-import androidx.compose.foundation.layout.heightIn
 import id.rosdie.puzzle.ui.components.AppCard
 import id.rosdie.puzzle.ui.components.Tag
 import id.rosdie.puzzle.ui.components.PrimaryButton
@@ -30,6 +29,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +46,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -66,6 +68,7 @@ import id.rosdie.puzzle.ui.components.BackTopBar
 import id.rosdie.puzzle.ui.components.PuzzleBoard
 import id.rosdie.puzzle.ui.components.StarRow
 import id.rosdie.puzzle.ui.components.rememberReducedMotion
+import id.rosdie.puzzle.ui.theme.accentTextColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -77,6 +80,7 @@ private data class Page(
     val demo: @Composable () -> Unit,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
     val pages = remember {
@@ -92,9 +96,11 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
     }
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
+    val sb = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         containerColor = Color.Transparent,
-        topBar = { BackTopBar(stringResource(R.string.nav_howto), onBack) }) { padding ->
+        modifier = Modifier.nestedScroll(sb.nestedScrollConnection),
+        topBar = { BackTopBar(stringResource(R.string.nav_howto), onBack, scrollBehavior = sb) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             HorizontalPager(state = pager, modifier = Modifier.weight(1f)) { index ->
                 val page = pages[index]
@@ -108,11 +114,12 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
                     Text(
                         stringResource(R.string.howto_step, index + 1, pages.size),
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = accentTextColor(),
                     )
                     Text(
                         stringResource(page.title),
                         style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.semantics { heading() },
                     )
                     Spacer(Modifier.height(16.dp))
@@ -120,7 +127,7 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
                         if (pager.currentPage == index) page.demo()
                     }
                     Spacer(Modifier.height(16.dp))
-                    Text(stringResource(page.body), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.widthIn(max = 560.dp))
+                    Text(stringResource(page.body), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.widthIn(max = 560.dp))
                 }
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center) {
@@ -143,7 +150,7 @@ fun HowToScreen(onBack: () -> Unit, onTryNow: (GameConfig) -> Unit) {
                 SecondaryButton(
                     stringResource(R.string.action_previous),
                     { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } },
-                    Modifier.weight(1f).heightIn(min = 56.dp),
+                    Modifier.weight(1f),
                     icon = AppIcons.ChevronLeft,
                     enabled = pager.currentPage > 0,
                 )
@@ -199,8 +206,8 @@ private fun DemoBoard(
                     finger.snapTo(center)
                     fingerAlpha.animateTo(0.85f, tween(150))
                     if (g == Gesture.SWIPE || g == Gesture.DRAG) {
-                        launch { finger.animateTo(center + Offset(d.dCol.toFloat() / n, d.dRow.toFloat() / n), tween(if (g == Gesture.DRAG) 420 else 220)) }
-                        delay(if (g == Gesture.DRAG) 300 else 120)
+                        launch { finger.animateTo(center + Offset(d.dCol.toFloat() / n, d.dRow.toFloat() / n), tween(if (g == Gesture.DRAG) 420 else 300)) }
+                        delay(if (g == Gesture.DRAG) 300 else 200)
                     } else {
                         delay(160)
                     }
